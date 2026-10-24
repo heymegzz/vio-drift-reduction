@@ -1,0 +1,630 @@
+[
+  {
+    "feature_name": "accel_x_m_s2",
+    "category": "raw_imu",
+    "formula": "Direct measurement (accelerometer X-axis)",
+    "rationale": "Primary IMU measurement; captures specific force along axis",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_x_m_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Coordinate frame unknown (likely body frame, Z\u2248-9.8)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "gyro_x_rad_s",
+    "category": "raw_imu",
+    "formula": "Direct measurement (gyroscope X-axis)",
+    "rationale": "Primary IMU measurement; captures angular velocity around axis",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_x_rad_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Coordinate frame unknown (likely body frame)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "accel_y_m_s2",
+    "category": "raw_imu",
+    "formula": "Direct measurement (accelerometer Y-axis)",
+    "rationale": "Primary IMU measurement; captures specific force along axis",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_y_m_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Coordinate frame unknown (likely body frame, Z\u2248-9.8)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "gyro_y_rad_s",
+    "category": "raw_imu",
+    "formula": "Direct measurement (gyroscope Y-axis)",
+    "rationale": "Primary IMU measurement; captures angular velocity around axis",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_y_rad_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Coordinate frame unknown (likely body frame)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "accel_z_m_s2",
+    "category": "raw_imu",
+    "formula": "Direct measurement (accelerometer Z-axis)",
+    "rationale": "Primary IMU measurement; captures specific force along axis",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_z_m_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Coordinate frame unknown (likely body frame, Z\u2248-9.8)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "gyro_z_rad_s",
+    "category": "raw_imu",
+    "formula": "Direct measurement (gyroscope Z-axis)",
+    "rationale": "Primary IMU measurement; captures angular velocity around axis",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_z_rad_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Coordinate frame unknown (likely body frame)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "accel_magnitude_m_s2",
+    "category": "pre_derived",
+    "formula": "\u221a(accel_x\u00b2 + accel_y\u00b2 + accel_z\u00b2)",
+    "rationale": "Total specific force magnitude; indicates dynamic regime",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_x_m_s2",
+      "accel_y_m_s2",
+      "accel_z_m_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Verified as exact L2 norm (max error ~1e-14)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "gyro_magnitude_rad_s",
+    "category": "pre_derived",
+    "formula": "\u221a(gyro_x\u00b2 + gyro_y\u00b2 + gyro_z\u00b2)",
+    "rationale": "Total angular velocity; higher values correlate with manoeuvring",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_x_rad_s",
+      "gyro_y_rad_s",
+      "gyro_z_rad_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Verified as exact L2 norm (max error ~1e-16)",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "dt_s",
+    "category": "temporal",
+    "formula": "time_s[i] - time_s[i-1] (within same log_id)",
+    "rationale": "Captures sampling irregularity; irregular dt affects integration error",
+    "units": "s",
+    "source_columns": [
+      "time_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "NaN at first row of each log and assumes time_s is monotonic",
+    "is_new_feature": true,
+    "nan_count": 4,
+    "valid_count": 38963
+  },
+  {
+    "feature_name": "time_since_gap_s",
+    "category": "temporal",
+    "formula": "time_s[i] - time_s[last_gap_start]",
+    "rationale": "Time elapsed since last large gap; segments continuous recording intervals",
+    "units": "s",
+    "source_columns": [
+      "time_s",
+      "dt_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Gap threshold = 0.1s; first row of each log starts at 0",
+    "is_new_feature": true,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "jerk_x_m_s3",
+    "category": "derivative",
+    "formula": "d(accel_x_m_s2)/dt = \u0394accel_x / \u0394t",
+    "rationale": "Rate of force change; rapid jerk increases integration error",
+    "units": "m/s\u00b3",
+    "source_columns": [
+      "accel_x_m_s2",
+      "dt_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Finite difference; NaN at log boundaries and gaps > 0.1s; amplifies noise",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "jerk_y_m_s3",
+    "category": "derivative",
+    "formula": "d(accel_y_m_s2)/dt = \u0394accel_y / \u0394t",
+    "rationale": "Rate of force change; rapid jerk increases integration error",
+    "units": "m/s\u00b3",
+    "source_columns": [
+      "accel_y_m_s2",
+      "dt_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Finite difference; NaN at log boundaries and gaps > 0.1s; amplifies noise",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "jerk_z_m_s3",
+    "category": "derivative",
+    "formula": "d(accel_z_m_s2)/dt = \u0394accel_z / \u0394t",
+    "rationale": "Rate of force change; rapid jerk increases integration error",
+    "units": "m/s\u00b3",
+    "source_columns": [
+      "accel_z_m_s2",
+      "dt_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Finite difference; NaN at log boundaries and gaps > 0.1s; amplifies noise",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "jerk_magnitude_m_s3",
+    "category": "derivative",
+    "formula": "\u221a(jerk_x\u00b2 + jerk_y\u00b2 + jerk_z\u00b2)",
+    "rationale": "Total jerk magnitude; summarises rate of force change",
+    "units": "m/s\u00b3",
+    "source_columns": [
+      "jerk_x_m_s3",
+      "jerk_y_m_s3",
+      "jerk_z_m_s3"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "None",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "gyro_dot_x_rad_s2",
+    "category": "derivative",
+    "formula": "d(gyro_x_rad_s)/dt = \u0394gyro_x / \u0394t",
+    "rationale": "Angular acceleration; captures onset of rotational manoeuvres",
+    "units": "rad/s\u00b2",
+    "source_columns": [
+      "gyro_x_rad_s",
+      "dt_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Finite difference; NaN at boundaries/gaps; amplifies noise",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "gyro_dot_y_rad_s2",
+    "category": "derivative",
+    "formula": "d(gyro_y_rad_s)/dt = \u0394gyro_y / \u0394t",
+    "rationale": "Angular acceleration; captures onset of rotational manoeuvres",
+    "units": "rad/s\u00b2",
+    "source_columns": [
+      "gyro_y_rad_s",
+      "dt_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Finite difference; NaN at boundaries/gaps; amplifies noise",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "gyro_dot_z_rad_s2",
+    "category": "derivative",
+    "formula": "d(gyro_z_rad_s)/dt = \u0394gyro_z / \u0394t",
+    "rationale": "Angular acceleration; captures onset of rotational manoeuvres",
+    "units": "rad/s\u00b2",
+    "source_columns": [
+      "gyro_z_rad_s",
+      "dt_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Finite difference; NaN at boundaries/gaps; amplifies noise",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "gyro_dot_magnitude_rad_s2",
+    "category": "derivative",
+    "formula": "\u221a(gyro_dot_x\u00b2 + gyro_dot_y\u00b2 + gyro_dot_z\u00b2)",
+    "rationale": "Total angular acceleration magnitude",
+    "units": "rad/s\u00b2",
+    "source_columns": [
+      "gyro_dot_x_rad_s2",
+      "gyro_dot_y_rad_s2",
+      "gyro_dot_z_rad_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "None",
+    "is_new_feature": true,
+    "nan_count": 41,
+    "valid_count": 38926
+  },
+  {
+    "feature_name": "accel_roll_mean_x",
+    "category": "rolling_statistic",
+    "formula": "rolling_mean(accel_x_m_s2, window=100)",
+    "rationale": "Smoothed accel X-axis; captures sustained force/rotation bias",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_x_m_s2",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log; does not cross log boundaries",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "accel_roll_std_x",
+    "category": "rolling_statistic",
+    "formula": "rolling_std(accel_x_m_s2, window=100)",
+    "rationale": "Variability of accel X-axis; indicates vibration/turbulence",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_x_m_s2",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "accel_roll_mean_y",
+    "category": "rolling_statistic",
+    "formula": "rolling_mean(accel_y_m_s2, window=100)",
+    "rationale": "Smoothed accel Y-axis; captures sustained force/rotation bias",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_y_m_s2",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log; does not cross log boundaries",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "accel_roll_std_y",
+    "category": "rolling_statistic",
+    "formula": "rolling_std(accel_y_m_s2, window=100)",
+    "rationale": "Variability of accel Y-axis; indicates vibration/turbulence",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_y_m_s2",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "accel_roll_mean_z",
+    "category": "rolling_statistic",
+    "formula": "rolling_mean(accel_z_m_s2, window=100)",
+    "rationale": "Smoothed accel Z-axis; captures sustained force/rotation bias",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_z_m_s2",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log; does not cross log boundaries",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "accel_roll_std_z",
+    "category": "rolling_statistic",
+    "formula": "rolling_std(accel_z_m_s2, window=100)",
+    "rationale": "Variability of accel Z-axis; indicates vibration/turbulence",
+    "units": "m/s\u00b2",
+    "source_columns": [
+      "accel_z_m_s2",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "gyro_roll_mean_x",
+    "category": "rolling_statistic",
+    "formula": "rolling_mean(gyro_x_rad_s, window=100)",
+    "rationale": "Smoothed gyro X-axis; captures sustained force/rotation bias",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_x_rad_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log; does not cross log boundaries",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "gyro_roll_std_x",
+    "category": "rolling_statistic",
+    "formula": "rolling_std(gyro_x_rad_s, window=100)",
+    "rationale": "Variability of gyro X-axis; indicates vibration/turbulence",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_x_rad_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "gyro_roll_mean_y",
+    "category": "rolling_statistic",
+    "formula": "rolling_mean(gyro_y_rad_s, window=100)",
+    "rationale": "Smoothed gyro Y-axis; captures sustained force/rotation bias",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_y_rad_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log; does not cross log boundaries",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "gyro_roll_std_y",
+    "category": "rolling_statistic",
+    "formula": "rolling_std(gyro_y_rad_s, window=100)",
+    "rationale": "Variability of gyro Y-axis; indicates vibration/turbulence",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_y_rad_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "gyro_roll_mean_z",
+    "category": "rolling_statistic",
+    "formula": "rolling_mean(gyro_z_rad_s, window=100)",
+    "rationale": "Smoothed gyro Z-axis; captures sustained force/rotation bias",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_z_rad_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log; does not cross log boundaries",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "gyro_roll_std_z",
+    "category": "rolling_statistic",
+    "formula": "rolling_std(gyro_z_rad_s, window=100)",
+    "rationale": "Variability of gyro Z-axis; indicates vibration/turbulence",
+    "units": "rad/s",
+    "source_columns": [
+      "gyro_z_rad_s",
+      "log_id"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "Window=100 samples (~0.5s); NaN for first 99 rows per log",
+    "is_new_feature": true,
+    "nan_count": 396,
+    "valid_count": 38571
+  },
+  {
+    "feature_name": "accel_xy_product",
+    "category": "cross_axis",
+    "formula": "accel_x_m_s2 * accel_y_m_s2",
+    "rationale": "Lateral force coupling; non-zero during coordinated turns",
+    "units": "m\u00b2/s\u2074",
+    "source_columns": [
+      "accel_x_m_s2",
+      "accel_y_m_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "None",
+    "is_new_feature": true,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "accel_xz_product",
+    "category": "cross_axis",
+    "formula": "accel_x_m_s2 * accel_z_m_s2",
+    "rationale": "Vertical-lateral coupling; captures pitch-coupled manoeuvres",
+    "units": "m\u00b2/s\u2074",
+    "source_columns": [
+      "accel_x_m_s2",
+      "accel_z_m_s2"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "None",
+    "is_new_feature": true,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "gyro_xy_product",
+    "category": "cross_axis",
+    "formula": "gyro_x_rad_s * gyro_y_rad_s",
+    "rationale": "Roll-pitch coupling; non-zero during complex rotations",
+    "units": "rad\u00b2/s\u00b2",
+    "source_columns": [
+      "gyro_x_rad_s",
+      "gyro_y_rad_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "None",
+    "is_new_feature": true,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "gyro_xz_product",
+    "category": "cross_axis",
+    "formula": "gyro_x_rad_s * gyro_z_rad_s",
+    "rationale": "Roll-yaw coupling; captures coordinated turn dynamics",
+    "units": "rad\u00b2/s\u00b2",
+    "source_columns": [
+      "gyro_x_rad_s",
+      "gyro_z_rad_s"
+    ],
+    "gps_denied_safe": true,
+    "leakage_risk": "none",
+    "assumptions": "None",
+    "is_new_feature": true,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "target_delta_v_n_m_s",
+    "category": "target",
+    "formula": "gps_vel_v_m_s - px4_vv_m_s (at update instants, zero-order held)",
+    "rationale": "Supervision target: velocity discrepancy between GPS and EKF",
+    "units": "m/s",
+    "source_columns": [
+      "gps_vel_v_m_s",
+      "px4_vz_m_s"
+    ],
+    "gps_denied_safe": false,
+    "leakage_risk": "is_target",
+    "assumptions": "EKF innovation residual, not pure IMU drift; zero-order held between updates",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "target_delta_v_e_m_s",
+    "category": "target",
+    "formula": "gps_vel_v_m_s - px4_vv_m_s (at update instants, zero-order held)",
+    "rationale": "Supervision target: velocity discrepancy between GPS and EKF",
+    "units": "m/s",
+    "source_columns": [
+      "gps_vel_v_m_s",
+      "px4_vz_m_s"
+    ],
+    "gps_denied_safe": false,
+    "leakage_risk": "is_target",
+    "assumptions": "EKF innovation residual, not pure IMU drift; zero-order held between updates",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  },
+  {
+    "feature_name": "target_delta_v_d_m_s",
+    "category": "target",
+    "formula": "gps_vel_v_m_s - px4_vv_m_s (at update instants, zero-order held)",
+    "rationale": "Supervision target: velocity discrepancy between GPS and EKF",
+    "units": "m/s",
+    "source_columns": [
+      "gps_vel_v_m_s",
+      "px4_vz_m_s"
+    ],
+    "gps_denied_safe": false,
+    "leakage_risk": "is_target",
+    "assumptions": "EKF innovation residual, not pure IMU drift; zero-order held between updates",
+    "is_new_feature": false,
+    "nan_count": 0,
+    "valid_count": 38967
+  }
+]
