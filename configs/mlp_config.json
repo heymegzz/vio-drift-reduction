@@ -1,0 +1,58 @@
+{
+  "model": "MLP (Multi-Layer Perceptron)",
+  "description": "Fully-connected feedforward network. Learns arbitrary non-linear feature interactions via stacked affine+activation layers.",
+  "math": {
+    "forward_pass": "z^(l) = sigma(W^(l) z^(l-1) + b^(l)),  z^(0) = x",
+    "loss": "L = (1/N) * sum ||y_i - y_hat_i||^2  (multi-output MSE)",
+    "backprop": "dL/dW^(l) via chain rule; weight updates: w <- w - lr * grad",
+    "activation": "ReLU(z) = max(0, z) — avoids vanishing gradient vs sigmoid",
+    "batch_norm": "BN(x) = (x - mu_B) / sqrt(sigma_B^2 + eps) * gamma + beta — stabilizes training by re-centering activations per mini-batch",
+    "dropout": "Randomly zero out p fraction of neurons during training — implicit ensemble regularization"
+  },
+  "assumptions": [
+    "Sufficient training data to fit parameters without memorizing",
+    "Feature distribution roughly stationary across flights",
+    "Rolling statistics already capture temporal context — point-in-time prediction suffices",
+    "Gradients don't vanish with ReLU + BatchNorm"
+  ],
+  "architecture": {
+    "layers": [
+      {"type": "Linear", "in": "n_features", "out": 256},
+      {"type": "BatchNorm1d"},
+      {"type": "ReLU"},
+      {"type": "Dropout", "p": 0.3},
+      {"type": "Linear", "in": 256, "out": 128},
+      {"type": "BatchNorm1d"},
+      {"type": "ReLU"},
+      {"type": "Dropout", "p": 0.2},
+      {"type": "Linear", "in": 128, "out": 64},
+      {"type": "ReLU"},
+      {"type": "Linear", "in": 64, "out": 3}
+    ],
+    "output_size": 3,
+    "comment": "3 outputs: delta_v_N, delta_v_E, delta_v_D simultaneously"
+  },
+  "hyperparameters": {
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "weight_decay": 1e-4,
+    "batch_size": 256,
+    "max_epochs": 150,
+    "early_stopping_patience": 15,
+    "lr_scheduler": "ReduceLROnPlateau",
+    "lr_factor": 0.5,
+    "lr_patience": 7,
+    "gradient_clip_norm": 1.0
+  },
+  "training": {
+    "framework": "PyTorch",
+    "nan_strategy": "drop rows with any NaN in features",
+    "scaler": "StandardScaler (fit on train only)",
+    "validation_flight": "log_52 (held out from training for val loss monitoring)",
+    "test_flight": "log_54 (never seen during training or HP tuning)"
+  },
+  "saved_model": "saved_models/mlp_model.pt",
+  "saved_scaler": "saved_models/mlp_scaler.pkl"
+}

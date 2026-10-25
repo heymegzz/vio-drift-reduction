@@ -1,0 +1,73 @@
+{
+  "model": "1D CNN",
+  "description": "Sliding-window 1D convolutional network. Learns local temporal patterns in raw+derivative IMU signals.",
+  "math": {
+    "convolution": "(x * k)[t] = sum_{i=0}^{K-1} x[t+i] * k[i]  (1D cross-correlation)",
+    "translation_invariance": "Same filter weights applied at every position — learns pattern regardless of when it occurs in window",
+    "receptive_field": "Stack of Conv(k=5) + Conv(k=3): RF = 5 + 3 - 1 = 7 timesteps (~35ms at 200Hz)",
+    "global_avg_pool": "gap = (1/T) * sum_t h[t]  — aggregates temporal representations into fixed-size vector",
+    "loss": "MSE over 3 output targets"
+  },
+  "assumptions": [
+    "Local temporal patterns (within ~0.25s window) are diagnostic of drift",
+    "Patterns are translation-invariant within a window",
+    "Overlapping windows with stride=1 are valid (past-only, no leakage)",
+    "Gap boundaries create invalid sequences — windows crossing gaps are excluded"
+  ],
+  "features_used": {
+    "comment": "CNN computes its own temporal context — rolling-stat features excluded to avoid redundancy",
+    "features": [
+      "accel_x_m_s2", "accel_y_m_s2", "accel_z_m_s2",
+      "gyro_x_rad_s", "gyro_y_rad_s", "gyro_z_rad_s",
+      "accel_magnitude_m_s2", "gyro_magnitude_rad_s",
+      "jerk_x_m_s3", "jerk_y_m_s3", "jerk_z_m_s3",
+      "gyro_dot_x_rad_s2", "gyro_dot_y_rad_s2", "gyro_dot_z_rad_s2",
+      "dt_s", "time_since_gap_s",
+      "accel_xy_product", "accel_xz_product",
+      "gyro_xy_product", "gyro_xz_product"
+    ]
+  },
+  "architecture": {
+    "input_shape": [50, "n_features"],
+    "layers": [
+      {"type": "Conv1d", "in_channels": "n_features", "out_channels": 64, "kernel_size": 5, "padding": 2},
+      {"type": "BatchNorm1d", "num_features": 64},
+      {"type": "ReLU"},
+      {"type": "Conv1d", "in_channels": 64, "out_channels": 128, "kernel_size": 3, "padding": 1},
+      {"type": "BatchNorm1d", "num_features": 128},
+      {"type": "ReLU"},
+      {"type": "Conv1d", "in_channels": 128, "out_channels": 64, "kernel_size": 3, "padding": 1},
+      {"type": "BatchNorm1d", "num_features": 64},
+      {"type": "ReLU"},
+      {"type": "GlobalAvgPool1d"},
+      {"type": "Linear", "in": 64, "out": 64},
+      {"type": "ReLU"},
+      {"type": "Dropout", "p": 0.2},
+      {"type": "Linear", "in": 64, "out": 3}
+    ]
+  },
+  "hyperparameters": {
+    "window_size": 50,
+    "stride": 5,
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "weight_decay": 1e-4,
+    "batch_size": 512,
+    "max_epochs": 100,
+    "early_stopping_patience": 10,
+    "lr_scheduler": "ReduceLROnPlateau",
+    "lr_factor": 0.5,
+    "lr_patience": 5,
+    "gradient_clip_norm": 1.0
+  },
+  "training": {
+    "framework": "PyTorch",
+    "windowing": "sliding window, stride=5, label=last timestep of window",
+    "gap_handling": "windows crossing gaps (dt>0.1s at any internal step) are excluded",
+    "scaler": "StandardScaler fitted on training sequences",
+    "validation_flight": "log_52",
+    "test_flight": "log_54"
+  },
+  "saved_model": "saved_models/cnn_model.pt",
+  "saved_scaler": "saved_models/cnn_scaler.pkl"
+}

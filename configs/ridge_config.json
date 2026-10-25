@@ -1,0 +1,29 @@
+{
+  "model": "Ridge Regression",
+  "description": "L2-regularized linear regression. Predicts all 3 velocity-discrepancy targets simultaneously.",
+  "math": {
+    "loss": "L(w) = ||y - Xw||^2 + alpha * ||w||^2",
+    "solution": "w = (X^T X + alpha*I)^{-1} X^T y  [closed-form, no gradient descent]",
+    "intuition": "L2 penalty shrinks coefficients toward zero, reducing variance from correlated features (e.g. rolling-mean pairs). Optimal alpha balances bias-variance trade-off."
+  },
+  "assumptions": [
+    "Linear relationship between features and targets",
+    "Gaussian i.i.d. residuals (violated by zero-order-hold targets — acknowledged)",
+    "No multi-collinearity severe enough to invert X^T X (alpha handles this)",
+    "Feature scales matter: StandardScaler applied before fitting"
+  ],
+  "hyperparameters": {
+    "alpha_search_space": [0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
+    "alpha_selected": "tuned via 3-fold TimeSeriesSplit CV on training logs",
+    "fit_intercept": true,
+    "solver": "auto"
+  },
+  "training": {
+    "framework": "scikit-learn",
+    "multi_output": "MultiOutputRegressor wrapping Ridge",
+    "nan_strategy": "drop rows with any NaN in features",
+    "scaler": "StandardScaler (fit on train only)"
+  },
+  "saved_model": "saved_models/ridge_model.pkl",
+  "saved_scaler": "saved_models/ridge_scaler.pkl"
+}

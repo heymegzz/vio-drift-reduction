@@ -1,0 +1,62 @@
+{
+  "model": "LSTM",
+  "description": "Stacked Long Short-Term Memory network. Learns long-range temporal dependencies via learned gating mechanisms.",
+  "math": {
+    "forget_gate": "f_t = sigma(W_f [h_{t-1}, x_t] + b_f)",
+    "input_gate":  "i_t = sigma(W_i [h_{t-1}, x_t] + b_i)",
+    "cell_candidate": "g_t = tanh(W_g [h_{t-1}, x_t] + b_g)",
+    "cell_update": "c_t = f_t * c_{t-1} + i_t * g_t",
+    "output_gate": "o_t = sigma(W_o [h_{t-1}, x_t] + b_o)",
+    "hidden_state": "h_t = o_t * tanh(c_t)",
+    "loss": "MSE over 3 output targets at last timestep",
+    "intuition": "f_t decides what to forget from cell memory; i_t * g_t writes new information. Gradient flows through c_t with minimal vanishing via the additive cell update — enabling memory over 0.5s+ horizons."
+  },
+  "assumptions": [
+    "Long-range temporal dependencies (>0.25s) contribute to drift prediction",
+    "Sequential order within a flight is meaningful",
+    "Stateless (windowed) mode: hidden states reset at each new window — no cross-window memory",
+    "Gap boundaries create invalid transitions — windows crossing gaps excluded"
+  ],
+  "features_used": {
+    "comment": "All 34 GPS-denied-safe features. LSTM handles temporal context internally so rolling stats are included as additional signals.",
+    "features": "all 34 predictor features"
+  },
+  "architecture": {
+    "input_shape": [100, 34],
+    "layers": [
+      {"type": "LSTM", "input_size": 34, "hidden_size": 128, "num_layers": 2,
+       "dropout": 0.2, "batch_first": true},
+      {"type": "Linear", "in": 128, "out": 64},
+      {"type": "ReLU"},
+      {"type": "Dropout", "p": 0.2},
+      {"type": "Linear", "in": 64, "out": 3}
+    ],
+    "comment": "Hidden state from final LSTM timestep fed to linear head"
+  },
+  "hyperparameters": {
+    "window_size": 100,
+    "stride": 10,
+    "hidden_size": 128,
+    "num_layers": 2,
+    "learning_rate": 0.0005,
+    "optimizer": "Adam",
+    "weight_decay": 1e-4,
+    "batch_size": 128,
+    "max_epochs": 100,
+    "early_stopping_patience": 15,
+    "lr_scheduler": "ReduceLROnPlateau",
+    "lr_factor": 0.5,
+    "lr_patience": 7,
+    "gradient_clip_norm": 1.0
+  },
+  "training": {
+    "framework": "PyTorch",
+    "windowing": "sliding window, stride=10, label=last timestep of window",
+    "gap_handling": "windows crossing gaps (any dt>0.1s within window) are excluded",
+    "scaler": "StandardScaler fitted on training sequences",
+    "validation_flight": "log_52",
+    "test_flight": "log_54"
+  },
+  "saved_model": "saved_models/lstm_model.pt",
+  "saved_scaler": "saved_models/lstm_scaler.pkl"
+}

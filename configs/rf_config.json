@@ -1,0 +1,33 @@
+{
+  "model": "Random Forest",
+  "description": "Ensemble of CART decision trees with bootstrap aggregation (bagging) and random feature subsets.",
+  "math": {
+    "prediction": "y_hat = (1/B) * sum_{b=1}^{B} T_b(x)  where T_b is tree b",
+    "split_criterion": "MSE reduction: gain = var(y_parent) - [n_L/n * var(y_L) + n_R/n * var(y_R)]",
+    "bias_variance": "Averaging B trees reduces variance by ~1/B if trees are uncorrelated. Random feature subset (sqrt(p)) decorrelates trees.",
+    "intuition": "Each tree is trained on a bootstrap sample and uses only sqrt(p) random features at each split. Ensemble averages out individual tree noise while preserving non-linear patterns."
+  },
+  "assumptions": [
+    "No distributional assumptions on residuals",
+    "Sufficient trees to reduce variance below single-tree variance",
+    "Features are on comparable scales (trees are scale-invariant, but scaling kept for consistency)",
+    "Rolling features capture sufficient temporal context for single-sample prediction"
+  ],
+  "hyperparameters": {
+    "n_estimators": 300,
+    "max_depth_search": [10, 20, 30, null],
+    "max_features_search": ["sqrt", 0.5, 0.3],
+    "min_samples_leaf_search": [1, 5, 20],
+    "n_iter_random_search": 30,
+    "cv_folds": 3,
+    "random_state": 42
+  },
+  "training": {
+    "framework": "scikit-learn",
+    "multi_output": "MultiOutputRegressor wrapping RandomForestRegressor",
+    "nan_strategy": "drop rows with any NaN in features",
+    "n_jobs": -1
+  },
+  "saved_model": "saved_models/rf_model.pkl",
+  "saved_scaler": "saved_models/rf_scaler.pkl"
+}

@@ -1,0 +1,11 @@
+rank,feature,importance
+1,time_since_gap_s,0.08953750677515937
+2,gyro_roll_mean_x,0.08635284989478643
+3,accel_roll_mean_z,0.08517706809885882
+4,accel_roll_mean_y,0.08483738950071605
+5,gyro_roll_mean_y,0.07900633124512593
+6,gyro_roll_mean_z,0.0736665451715824
+7,accel_roll_mean_x,0.07332326040535014
+8,gyro_roll_std_y,0.07290755613962561
+9,accel_roll_std_z,0.059412230571148326
+10,gyro_roll_std_x,0.05511025345903814
