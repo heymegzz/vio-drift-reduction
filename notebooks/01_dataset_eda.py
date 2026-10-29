@@ -86,3 +86,32 @@ df.tail(3)
 # %%
 df.sample(3, random_state=42)
 
+# %% [markdown]
+# ---
+# ## 2. Schema Inspection
+
+# %%
+schema_info = pd.DataFrame({
+    "dtype": df.dtypes,
+    "non_null": df.count(),
+    "null_count": df.isnull().sum(),
+    "n_unique": df.nunique(),
+    "example_value": df.iloc[0],
+})
+schema_info["is_constant"] = schema_info["n_unique"] <= 1
+print(schema_info.to_string())
+
+# %%
+numeric_cols = df.select_dtypes(include="number").columns.tolist()
+nonnumeric_cols = df.select_dtypes(exclude="number").columns.tolist()
+print(f"Numeric columns ({len(numeric_cols)}): {numeric_cols}")
+print(f"Non-numeric columns ({len(nonnumeric_cols)}): {nonnumeric_cols}")
+
+# %%
+# Constant columns
+constant_cols = [c for c in df.columns if df[c].nunique() <= 1]
+print(f"Constant columns: {constant_cols if constant_cols else 'None'}")
+
+# %%
+schema_info.to_csv(TABLES_DIR / "schema_summary.csv")
+print(f"Schema summary saved to {TABLES_DIR / 'schema_summary.csv'}")
