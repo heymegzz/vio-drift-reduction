@@ -115,3 +115,61 @@ print(f"Constant columns: {constant_cols if constant_cols else 'None'}")
 # %%
 schema_info.to_csv(TABLES_DIR / "schema_summary.csv")
 print(f"Schema summary saved to {TABLES_DIR / 'schema_summary.csv'}")
+
+# %% [markdown]
+# ---
+# ## 3. Missing Values, Infinities, and Duplicates
+
+# %%
+# Missing values
+missing = df.isnull().sum()
+missing_pct = (missing / len(df) * 100).round(2)
+missing_report = pd.DataFrame({"missing_count": missing, "missing_pct": missing_pct})
+missing_report = missing_report[missing_report["missing_count"] > 0]
+if missing_report.empty:
+    print("No missing values found in any column.")
+else:
+    print(missing_report)
+
+# %%
+# Infinities (positive and negative) in numeric columns
+inf_report = pd.DataFrame({
+    "pos_inf": (df[numeric_cols] == np.inf).sum(),
+    "neg_inf": (df[numeric_cols] == -np.inf).sum(),
+})
+inf_report["total_inf"] = inf_report["pos_inf"] + inf_report["neg_inf"]
+inf_nonzero = inf_report[inf_report["total_inf"] > 0]
+if inf_nonzero.empty:
+    print("No infinite values found in any numeric column.")
+else:
+    print(inf_nonzero)
+
+# %%
+# Exact duplicate rows
+n_dup_rows = df.duplicated().sum()
+print(f"Exact duplicate rows: {n_dup_rows}")
+if n_dup_rows > 0:
+    print("First 5 duplicated rows:")
+    print(df[df.duplicated(keep=False)].head(5))
+
+# %%
+# Duplicate timestamps within each log
+if "log_id" in df.columns and "timestamp" in df.columns:
+    dup_ts = df.groupby("log_id")["timestamp"].apply(
+        lambda s: s.duplicated().sum()
+    )
+    print("Duplicate timestamps within each log:")
+    print(dup_ts.to_string())
+    if dup_ts.sum() == 0:
+        print("No duplicate timestamps within any log.")
+
+# %%
+quality_report = pd.DataFrame({
+    "missing": df.isnull().sum(),
+    "pos_inf": [(df[c] == np.inf).sum() if c in numeric_cols else 0 for c in df.columns],
+    "neg_inf": [(df[c] == -np.inf).sum() if c in numeric_cols else 0 for c in df.columns],
+    "n_unique": df.nunique(),
+})
+quality_report.to_csv(TABLES_DIR / "quality_audit.csv")
+print(f"Quality audit saved to {TABLES_DIR / 'quality_audit.csv'}")
+
