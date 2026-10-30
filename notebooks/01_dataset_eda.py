@@ -173,3 +173,111 @@ quality_report = pd.DataFrame({
 quality_report.to_csv(TABLES_DIR / "quality_audit.csv")
 print(f"Quality audit saved to {TABLES_DIR / 'quality_audit.csv'}")
 
+# %% [markdown]
+# ---
+# ## 4. Recording Groups and Timestamp Analysis
+
+# %%
+logs = df["log_id"].unique()
+print(f"Number of logs: {len(logs)}")
+for lid in logs:
+    print(f"  {lid}")
+
+# %%
+log_summary_rows = []
+for lid in logs:
+    grp = df[df["log_id"] == lid].copy()
+    ts = grp["timestamp"].values
+    dt_us = np.diff(ts)  # microsecond differences
+
+    time_s = grp["time_s"].values
+    elapsed_ts = (ts - ts[0]) / 1e6  # convert µs to seconds
+    elapsed_time_s = time_s - time_s[0]
+
+    row = {
+        "log_id": lid,
+        "n_rows": len(grp),
+        "timestamp_min": ts[0],
+        "timestamp_max": ts[-1],
+        "time_s_min": time_s[0],
+        "time_s_max": time_s[-1],
+        "time_span_s": (ts[-1] - ts[0]) / 1e6,
+        "is_monotonic": bool(np.all(dt_us > 0)),
+        "n_repeated_ts": int(np.sum(dt_us == 0)),
+        "n_decreasing_ts": int(np.sum(dt_us < 0)),
+        "dt_min_us": int(dt_us.min()) if len(dt_us) > 0 else None,
+        "dt_median_us": int(np.median(dt_us)) if len(dt_us) > 0 else None,
+        "dt_p90_us": int(np.percentile(dt_us, 90)) if len(dt_us) > 0 else None,
+        "dt_p99_us": int(np.percentile(dt_us, 99)) if len(dt_us) > 0 else None,
+        "dt_max_us": int(dt_us.max()) if len(dt_us) > 0 else None,
+        "n_gaps_over_10ms": int(np.sum(dt_us > 10_000)),
+        "max_elapsed_diff": float(np.max(np.abs(elapsed_ts - elapsed_time_s))),
+    }
+    log_summary_rows.append(row)
+
+log_summary = pd.DataFrame(log_summary_rows)
+print(log_summary.to_string(index=False))
+
+# %%
+log_summary.to_csv(TABLES_DIR / "log_summary.csv", index=False)
+print(f"Log summary saved to {TABLES_DIR / 'log_summary.csv'}")
+
+# %% [markdown]
+# ### 4.1 Timestamp vs time_s consistency
+#
+# Both `timestamp` (integer, likely microseconds) and `time_s` (float, seconds)
+# exist. We test whether `time_s` equals `(timestamp - timestamp_0) / 1e6`
+# within each log.
+
+# %%
+for lid in logs:
+    grp = df[df["log_id"] == lid]
+    ts = grp["timestamp"].values.astype(np.float64)
+    time_s = grp["time_s"].values
+    elapsed_from_ts = (ts - ts[0]) / 1e6
+    diff = np.abs(elapsed_from_ts - (time_s - time_s[0]))
+    print(f"{lid}: max |elapsed_ts - elapsed_time_s| = {diff.max():.6e} s, "
+          f"mean = {diff.mean():.6e} s")
+
+# %% [markdown]
+# ### 4.2 Sampling interval distributions
+#
+# The CSV row cadence (time between successive rows) is distinct from the
+# native sensor sampling rate. The sensor may sample at a higher rate and be
+# downsampled or merged during extraction. The nominal ~5 ms interval
+# corresponds to ~200 Hz row cadence.
+
+# %%
+fig, axes = plt.subplots(2, 2, figsize=(14, 8))
+axes = axes.ravel()
+for i, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    ts = grp["timestamp"].values
+    dt_ms = np.diff(ts) / 1e3  # microseconds to milliseconds
+    ax = axes[i]
+    ax.hist(dt_ms, bins=100, edgecolor="k", alpha=0.7)
+    ax.set_title(f"{lid}", fontsize=10)
+    ax.set_xlabel("Interval (ms)")
+    ax.set_ylabel("Count")
+    ax.axvline(5.0, color="red", linestyle="--", alpha=0.7, label="5 ms")
+    ax.legend(fontsize=8)
+fig.suptitle("Sampling Interval Distributions per Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "sampling_intervals.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %%
+# Locations of large gaps (> 10 ms)
+for lid in logs:
+    grp = df[df["log_id"] == lid].reset_index(drop=True)
+    ts = grp["timestamp"].values
+    dt_us = np.diff(ts)
+    gap_idx = np.where(dt_us > 10_000)[0]
+    if len(gap_idx) > 0:
+        print(f"\n{lid}: {len(gap_idx)} gaps > 10 ms")
+        for idx in gap_idx[:10]:  # show first 10
+            print(f"  Row {idx}→{idx+1}: dt = {dt_us[idx]/1e3:.2f} ms, "
+                  f"time_s = {grp.at[idx, 'time_s']:.4f}")
+    else:
+        print(f"{lid}: No gaps > 10 ms")
+
