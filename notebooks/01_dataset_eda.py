@@ -342,3 +342,72 @@ print(f"  Match within 1e-6: {(gyro_mag_diff < 1e-6).all()}")
 #   (not gravity-compensated) accelerometer data.
 # - **Calibration**: No information about calibration status is available.
 
+# %% [markdown]
+# ---
+# ## 6. GPS, PX4 Estimator, and Reference Fields
+
+# %%
+gps_vel_cols = ["gps_vel_n_m_s", "gps_vel_e_m_s", "gps_vel_d_m_s"]
+gps_quality_cols = ["vel_ned_valid", "fix_type", "gps_speed_m_s",
+                    "gps_eph_m", "gps_epv_m", "gps_satellites_used"]
+px4_vel_cols = ["px4_vx_m_s", "px4_vy_m_s", "px4_vz_m_s"]
+px4_validity_cols = ["v_xy_valid", "v_z_valid", "xy_valid", "z_valid"]
+dr_cols = ["dead_reckoning"]
+
+print("=== GPS Velocity Statistics ===")
+print(df[gps_vel_cols].describe().T.to_string())
+
+# %%
+print("\n=== GPS Quality Fields ===")
+print(df[gps_quality_cols].describe().T.to_string())
+
+# %%
+print("\n=== Unique values in GPS quality / validity fields ===")
+for c in gps_quality_cols + ["vel_ned_valid"]:
+    print(f"  {c}: {sorted(df[c].unique())}")
+
+# %%
+print("\n=== PX4 Velocity Statistics ===")
+print(df[px4_vel_cols].describe().T.to_string())
+
+# %%
+print("\n=== PX4 Validity Flags ===")
+for c in px4_validity_cols + dr_cols:
+    print(f"  {c}: unique = {sorted(df[c].unique())}")
+
+# %% [markdown]
+# ### 6.1 Absent columns
+#
+# The following categories are **not present** in this dataset:
+# - GPS position (lat, lon, alt).
+# - PX4 position estimates.
+# - Attitude (quaternion / Euler angles).
+# - Magnetometer readings.
+# - Barometer readings.
+
+# %% [markdown]
+# ### 6.2 Repeated consecutive values in GPS and PX4 velocity
+#
+# GPS receivers typically update at a lower rate than the IMU (e.g., 5–10 Hz
+# vs 200 Hz). Between updates, the same GPS velocity may be repeated in merged
+# rows. Similarly, the PX4 estimator may update at a different cadence.
+#
+# We count runs of consecutive identical values. **Note**: Observing value
+# changes does not confirm a new sensor measurement arrived at that exact row;
+# it only indicates the merged value changed.
+
+# %%
+for col_group, label in [(gps_vel_cols, "GPS velocity"), (px4_vel_cols, "PX4 velocity")]:
+    print(f"\n=== Repeated consecutive values: {label} ===")
+    for lid in logs:
+        grp = df[df["log_id"] == lid]
+        changes = {}
+        for c in col_group:
+            vals = grp[c].values
+            n_changes = np.sum(vals[1:] != vals[:-1])
+            changes[c] = n_changes
+        total_rows = len(grp) - 1
+        first_col = col_group[0]
+        print(f"  {lid}: {changes[first_col]} value changes / {total_rows} intervals "
+              f"({changes[first_col]/total_rows*100:.1f}%) for {first_col}")
+
