@@ -411,3 +411,40 @@ for col_group, label in [(gps_vel_cols, "GPS velocity"), (px4_vel_cols, "PX4 vel
         print(f"  {lid}: {changes[first_col]} value changes / {total_rows} intervals "
               f"({changes[first_col]/total_rows*100:.1f}%) for {first_col}")
 
+# %% [markdown]
+# ---
+# ## 7. Target Definition Verification
+
+# %%
+target_cols = ["target_delta_v_n_m_s", "target_delta_v_e_m_s", "target_delta_v_d_m_s"]
+
+# Verify: target = px4_velocity - gps_velocity
+computed_n = df["px4_vx_m_s"] - df["gps_vel_n_m_s"]
+computed_e = df["px4_vy_m_s"] - df["gps_vel_e_m_s"]
+computed_d = df["px4_vz_m_s"] - df["gps_vel_d_m_s"]
+
+diff_n = np.abs(df["target_delta_v_n_m_s"] - computed_n)
+diff_e = np.abs(df["target_delta_v_e_m_s"] - computed_e)
+diff_d = np.abs(df["target_delta_v_d_m_s"] - computed_d)
+
+target_verif = pd.DataFrame({
+    "component": ["north (n)", "east (e)", "down (d)"],
+    "max_abs_diff": [diff_n.max(), diff_e.max(), diff_d.max()],
+    "mean_abs_diff": [diff_n.mean(), diff_e.mean(), diff_d.mean()],
+    "match_within_1e-10": [
+        (diff_n < 1e-10).all(),
+        (diff_e < 1e-10).all(),
+        (diff_d < 1e-10).all(),
+    ],
+})
+print("Target verification: target_delta_v = px4_v - gps_vel")
+print(target_verif.to_string(index=False))
+
+# %%
+target_verif.to_csv(TABLES_DIR / "target_verification.csv", index=False)
+print(f"Target verification saved to {TABLES_DIR / 'target_verification.csv'}")
+
+# %%
+print("\n=== Target statistics ===")
+print(df[target_cols].describe(percentiles=[0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99]).T.to_string())
+
