@@ -281,3 +281,64 @@ for lid in logs:
     else:
         print(f"{lid}: No gaps > 10 ms")
 
+# %% [markdown]
+# ---
+# ## 5. IMU Channel Profiling
+
+# %%
+accel_cols = ["accel_x_m_s2", "accel_y_m_s2", "accel_z_m_s2"]
+gyro_cols = ["gyro_x_rad_s", "gyro_y_rad_s", "gyro_z_rad_s"]
+imu_cols = accel_cols + gyro_cols
+
+imu_stats = df[imu_cols].describe(percentiles=[0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99]).T
+print(imu_stats.to_string())
+
+# %%
+imu_stats.to_csv(TABLES_DIR / "imu_statistics.csv")
+print(f"IMU statistics saved to {TABLES_DIR / 'imu_statistics.csv'}")
+
+# %% [markdown]
+# ### 5.1 Accelerometer magnitude verification
+#
+# The column `accel_magnitude_m_s2` should equal
+# `sqrt(accel_x² + accel_y² + accel_z²)`.
+
+# %%
+computed_accel_mag = np.sqrt(
+    df["accel_x_m_s2"]**2 + df["accel_y_m_s2"]**2 + df["accel_z_m_s2"]**2
+)
+accel_mag_diff = np.abs(df["accel_magnitude_m_s2"] - computed_accel_mag)
+print(f"Accelerometer magnitude verification:")
+print(f"  Max |stored - computed|  = {accel_mag_diff.max():.2e}")
+print(f"  Mean |stored - computed| = {accel_mag_diff.mean():.2e}")
+print(f"  Match within 1e-6: {(accel_mag_diff < 1e-6).all()}")
+
+# %% [markdown]
+# ### 5.2 Gyroscope magnitude verification
+#
+# The column `gyro_magnitude_rad_s` should equal
+# `sqrt(gyro_x² + gyro_y² + gyro_z²)`.
+
+# %%
+computed_gyro_mag = np.sqrt(
+    df["gyro_x_rad_s"]**2 + df["gyro_y_rad_s"]**2 + df["gyro_z_rad_s"]**2
+)
+gyro_mag_diff = np.abs(df["gyro_magnitude_rad_s"] - computed_gyro_mag)
+print(f"Gyroscope magnitude verification:")
+print(f"  Max |stored - computed|  = {gyro_mag_diff.max():.2e}")
+print(f"  Mean |stored - computed| = {gyro_mag_diff.mean():.2e}")
+print(f"  Match within 1e-6: {(gyro_mag_diff < 1e-6).all()}")
+
+# %% [markdown]
+# ### 5.3 Physical interpretation notes
+#
+# - **Units**: Column names suggest `m/s²` for accelerometers and `rad/s` for
+#   gyroscopes. These are consistent with PX4 `sensor_combined` topic units.
+# - **Coordinate frame**: Unknown. PX4 typically uses FRD (front-right-down)
+#   body frame for IMU data, but this cannot be confirmed from the CSV alone.
+# - **Gravity**: At rest, we would expect `accel_z ≈ -9.81 m/s²` in FRD.
+#   The mean of `accel_z_m_s2` is approximately -9.78, consistent with a
+#   body-frame z-axis reading including gravity. This suggests raw
+#   (not gravity-compensated) accelerometer data.
+# - **Calibration**: No information about calibration status is available.
+
