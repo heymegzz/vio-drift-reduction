@@ -515,3 +515,129 @@ for c in extreme_cols:
     print(f"  MIN = {df.at[idx_min, c]:.4f} at log={df.at[idx_min, 'log_id']}, "
           f"time_s={df.at[idx_min, 'time_s']:.4f}")
 
+# %% [markdown]
+# ---
+# ## 9. Temporal Visualizations
+
+# %% [markdown]
+# ### 9.1 Accelerometer time series
+
+# %%
+fig, axes = plt.subplots(len(logs), 1, figsize=(16, 3.5 * len(logs)), sharex=False)
+if len(logs) == 1:
+    axes = [axes]
+for i, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    ax = axes[i]
+    for c, color in zip(accel_cols, ["#e74c3c", "#27ae60", "#2980b9"]):
+        ax.plot(grp["time_s"], grp[c], label=c.replace("accel_", "").replace("_m_s2", ""),
+                alpha=0.7, linewidth=0.5, color=color)
+    ax.set_title(f"Accelerometer — {lid}", fontsize=10)
+    ax.set_ylabel("m/s²")
+    ax.legend(loc="upper right", fontsize=8)
+axes[-1].set_xlabel("time_s")
+fig.suptitle("Accelerometer Axes per Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "accel_time_series.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 9.2 Gyroscope time series
+
+# %%
+fig, axes = plt.subplots(len(logs), 1, figsize=(16, 3.5 * len(logs)), sharex=False)
+if len(logs) == 1:
+    axes = [axes]
+for i, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    ax = axes[i]
+    for c, color in zip(gyro_cols, ["#e74c3c", "#27ae60", "#2980b9"]):
+        ax.plot(grp["time_s"], grp[c], label=c.replace("gyro_", "").replace("_rad_s", ""),
+                alpha=0.7, linewidth=0.5, color=color)
+    ax.set_title(f"Gyroscope — {lid}", fontsize=10)
+    ax.set_ylabel("rad/s")
+    ax.legend(loc="upper right", fontsize=8)
+axes[-1].set_xlabel("time_s")
+fig.suptitle("Gyroscope Axes per Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "gyro_time_series.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 9.3 GPS vs PX4 velocity
+
+# %%
+vel_pairs = [
+    ("gps_vel_n_m_s", "px4_vx_m_s", "North / X"),
+    ("gps_vel_e_m_s", "px4_vy_m_s", "East / Y"),
+    ("gps_vel_d_m_s", "px4_vz_m_s", "Down / Z"),
+]
+fig, axes = plt.subplots(3, len(logs), figsize=(5 * len(logs), 10), sharex=False)
+if len(logs) == 1:
+    axes = axes.reshape(-1, 1)
+for j, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    for i, (gps_c, px4_c, label) in enumerate(vel_pairs):
+        ax = axes[i, j]
+        ax.plot(grp["time_s"], grp[gps_c], alpha=0.7, linewidth=0.5,
+                label="GPS", color="#3498db")
+        ax.plot(grp["time_s"], grp[px4_c], alpha=0.7, linewidth=0.5,
+                label="PX4", color="#e67e22")
+        if i == 0:
+            ax.set_title(lid, fontsize=9)
+        if j == 0:
+            ax.set_ylabel(f"{label} (m/s)")
+        ax.legend(fontsize=7, loc="upper right")
+axes[-1, 0].set_xlabel("time_s")
+fig.suptitle("GPS vs PX4 Velocity Components per Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "gps_vs_px4_velocity.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 9.4 Target residuals over time
+
+# %%
+fig, axes = plt.subplots(len(logs), 1, figsize=(16, 3.5 * len(logs)), sharex=False)
+if len(logs) == 1:
+    axes = [axes]
+for i, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    ax = axes[i]
+    for c, color in zip(target_cols, ["#9b59b6", "#1abc9c", "#e74c3c"]):
+        ax.plot(grp["time_s"], grp[c], alpha=0.7, linewidth=0.5,
+                label=c.replace("target_delta_v_", "Δv_").replace("_m_s", ""),
+                color=color)
+    ax.set_title(f"Target Residuals — {lid}", fontsize=10)
+    ax.set_ylabel("m/s")
+    ax.legend(loc="upper right", fontsize=8)
+    ax.axhline(0, color="gray", linestyle=":", alpha=0.5)
+axes[-1].set_xlabel("time_s")
+fig.suptitle("Velocity Residuals (PX4 − GPS) per Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "target_residuals_time_series.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 9.5 Sampling intervals over time
+
+# %%
+fig, axes = plt.subplots(len(logs), 1, figsize=(16, 2.5 * len(logs)), sharex=False)
+if len(logs) == 1:
+    axes = [axes]
+for i, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    ts = grp["timestamp"].values
+    dt_ms = np.diff(ts) / 1e3
+    ax = axes[i]
+    ax.plot(grp["time_s"].values[1:], dt_ms, linewidth=0.3, alpha=0.7, color="#2c3e50")
+    ax.axhline(5.0, color="red", linestyle="--", alpha=0.5, label="5 ms")
+    ax.set_title(f"Row Intervals — {lid}", fontsize=10)
+    ax.set_ylabel("Interval (ms)")
+    ax.legend(fontsize=8)
+axes[-1].set_xlabel("time_s")
+fig.suptitle("Sampling Intervals Over Time", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "sampling_intervals_over_time.png", dpi=150, bbox_inches="tight")
+plt.show()
+
