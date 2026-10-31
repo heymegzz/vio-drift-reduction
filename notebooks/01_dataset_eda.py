@@ -641,3 +641,76 @@ fig.tight_layout()
 fig.savefig(FIGURES_DIR / "sampling_intervals_over_time.png", dpi=150, bbox_inches="tight")
 plt.show()
 
+# %% [markdown]
+# ---
+# ## 10. Distribution and Recording Comparisons
+
+# %% [markdown]
+# ### 10.1 IMU channel distributions by log
+
+# %%
+fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+for i, c in enumerate(imu_cols):
+    ax = axes[i // 3, i % 3]
+    for lid in logs:
+        grp = df[df["log_id"] == lid]
+        ax.hist(grp[c], bins=80, alpha=0.5, label=lid[:6], density=True)
+    ax.set_title(c, fontsize=10)
+    ax.set_ylabel("Density")
+    ax.legend(fontsize=7)
+fig.suptitle("IMU Channel Distributions by Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "imu_distributions_by_log.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 10.2 Target distributions by log
+
+# %%
+fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+for i, c in enumerate(target_cols):
+    ax = axes[i]
+    for lid in logs:
+        grp = df[df["log_id"] == lid]
+        ax.hist(grp[c], bins=80, alpha=0.5, label=lid[:6], density=True)
+    ax.set_title(c.replace("target_delta_v_", "Δv_"), fontsize=10)
+    ax.set_ylabel("Density")
+    ax.legend(fontsize=7)
+fig.suptitle("Target Residual Distributions by Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "target_distributions_by_log.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 10.3 Box plots comparing logs
+
+# %%
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+for i, c in enumerate(target_cols):
+    ax = axes[i]
+    data_by_log = [df[df["log_id"] == lid][c].values for lid in logs]
+    bp = ax.boxplot(data_by_log, labels=[lid[:6] for lid in logs], patch_artist=True)
+    colors = ["#3498db", "#e74c3c", "#2ecc71", "#f39c12"]
+    for patch, color in zip(bp["boxes"], colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.6)
+    ax.set_title(c.replace("target_delta_v_", "Δv_"), fontsize=10)
+    ax.set_ylabel("m/s")
+fig.suptitle("Target Residual Box Plots by Log", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "target_boxplots_by_log.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 10.4 Per-log summary comparison
+#
+# Differences across logs are described statistically. Without supporting
+# metadata (e.g., flight mode, wind conditions, pilot inputs), we cannot
+# attribute differences to specific flight conditions such as hovering
+# or aggressive manoeuvres.
+
+# %%
+per_log_mean = df.groupby("log_id")[imu_cols + target_cols].mean()
+print(per_log_mean.T.to_string())
+per_log_mean.to_csv(TABLES_DIR / "per_log_means.csv")
+
