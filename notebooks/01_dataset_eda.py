@@ -448,3 +448,70 @@ print(f"Target verification saved to {TABLES_DIR / 'target_verification.csv'}")
 print("\n=== Target statistics ===")
 print(df[target_cols].describe(percentiles=[0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99]).T.to_string())
 
+# %% [markdown]
+# ---
+# ## 8. Distributions and Potential Outliers
+
+# %%
+# Global descriptive statistics for all numeric columns
+desc_global = df[numeric_cols].describe(
+    percentiles=[0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99]
+).T
+desc_global.to_csv(TABLES_DIR / "descriptive_statistics_global.csv")
+print(f"Global statistics saved ({len(desc_global)} columns)")
+
+# %%
+# Per-log statistics for selected columns
+selected_cols = imu_cols + target_cols + ["gps_eph_m", "gps_satellites_used"]
+per_log_stats = df.groupby("log_id")[selected_cols].describe(
+    percentiles=[0.01, 0.25, 0.5, 0.75, 0.99]
+)
+per_log_stats.to_csv(TABLES_DIR / "descriptive_statistics_per_log.csv")
+print(f"Per-log statistics saved ({per_log_stats.shape})")
+
+# %% [markdown]
+# ### 8.1 Potential outliers using 1.5×IQR rule
+#
+# We use the classic 1.5×IQR rule as a diagnostic to flag values that lie
+# far from the central distribution. These are flagged as **potential
+# outliers requiring investigation**, not as confirmed faulty measurements.
+# Extreme IMU readings can be physically real (e.g., during aggressive
+# manoeuvres or vibration).
+
+# %%
+outlier_summary_rows = []
+for c in imu_cols + target_cols:
+    q1 = df[c].quantile(0.25)
+    q3 = df[c].quantile(0.75)
+    iqr = q3 - q1
+    lower = q1 - 1.5 * iqr
+    upper = q3 + 1.5 * iqr
+    mask = (df[c] < lower) | (df[c] > upper)
+    n_outliers = mask.sum()
+    outlier_summary_rows.append({
+        "column": c,
+        "Q1": q1, "Q3": q3, "IQR": iqr,
+        "lower_fence": lower, "upper_fence": upper,
+        "n_flagged": n_outliers,
+        "pct_flagged": round(n_outliers / len(df) * 100, 2),
+    })
+
+outlier_summary = pd.DataFrame(outlier_summary_rows)
+print(outlier_summary.to_string(index=False))
+
+# %%
+outlier_summary.to_csv(TABLES_DIR / "outlier_flags_iqr.csv", index=False)
+print(f"Outlier flags saved to {TABLES_DIR / 'outlier_flags_iqr.csv'}")
+
+# %%
+# Notable extremes with log_id and time_s
+extreme_cols = ["accel_magnitude_m_s2", "gyro_magnitude_rad_s"] + target_cols
+for c in extreme_cols:
+    idx_max = df[c].idxmax()
+    idx_min = df[c].idxmin()
+    print(f"\n{c}:")
+    print(f"  MAX = {df.at[idx_max, c]:.4f} at log={df.at[idx_max, 'log_id']}, "
+          f"time_s={df.at[idx_max, 'time_s']:.4f}")
+    print(f"  MIN = {df.at[idx_min, c]:.4f} at log={df.at[idx_min, 'log_id']}, "
+          f"time_s={df.at[idx_min, 'time_s']:.4f}")
+
