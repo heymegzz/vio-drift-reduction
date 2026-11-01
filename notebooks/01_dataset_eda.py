@@ -714,3 +714,122 @@ per_log_mean = df.groupby("log_id")[imu_cols + target_cols].mean()
 print(per_log_mean.T.to_string())
 per_log_mean.to_csv(TABLES_DIR / "per_log_means.csv")
 
+# %% [markdown]
+# ---
+# ## 11. Correlations and Temporal Dependence
+
+# %% [markdown]
+# ### 11.1 Correlation matrix
+#
+# We compute Pearson correlations between selected numeric signals,
+# excluding identifiers (`log_id`, `timestamp`) and constant/near-constant
+# validity flags.
+
+# %%
+corr_cols = imu_cols + ["accel_magnitude_m_s2", "gyro_magnitude_rad_s"] + \
+            gps_vel_cols + px4_vel_cols + target_cols + \
+            ["gps_eph_m", "gps_epv_m", "gps_satellites_used"]
+
+corr_matrix = df[corr_cols].corr()
+
+fig, ax = plt.subplots(figsize=(16, 13))
+mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
+sns.heatmap(corr_matrix, mask=mask, annot=True, fmt=".2f", center=0,
+            cmap="RdBu_r", vmin=-1, vmax=1, square=True, linewidths=0.5,
+            annot_kws={"size": 7}, ax=ax)
+ax.set_title("Pearson Correlation Matrix (Selected Signals)", fontsize=13)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "correlation_matrix.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# **Interpretation note**: Correlations involving target components
+# (`target_delta_v_*`) with PX4 or GPS velocity components can be
+# algebraically induced because `target = px4 - gps`. High correlations
+# here do not constitute evidence of causal sensor-error relationships.
+
+# %% [markdown]
+# ### 11.2 Sensor vs target scatter plots
+
+# %%
+scatter_pairs = [
+    ("accel_x_m_s2", "target_delta_v_n_m_s"),
+    ("accel_y_m_s2", "target_delta_v_e_m_s"),
+    ("accel_z_m_s2", "target_delta_v_d_m_s"),
+    ("gyro_magnitude_rad_s", "target_delta_v_n_m_s"),
+    ("gps_eph_m", "target_delta_v_n_m_s"),
+    ("gps_satellites_used", "target_delta_v_n_m_s"),
+]
+
+fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+axes = axes.ravel()
+for i, (x_col, y_col) in enumerate(scatter_pairs):
+    ax = axes[i]
+    # Subsample for readability
+    sample = df.sample(min(5000, len(df)), random_state=42)
+    ax.scatter(sample[x_col], sample[y_col], alpha=0.2, s=5, color="#2c3e50")
+    ax.set_xlabel(x_col, fontsize=9)
+    ax.set_ylabel(y_col, fontsize=9)
+    r = df[x_col].corr(df[y_col])
+    ax.set_title(f"r = {r:.3f}", fontsize=10)
+fig.suptitle("Sensor vs Target Scatter Plots (sampled)", fontsize=13, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "sensor_vs_target_scatter.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ### 11.3 Autocorrelation of target residuals
+#
+# Strong autocorrelation in target signals indicates temporal dependence:
+# successive rows carry dependent information. This means random row-wise
+# splitting for train/test would leak future information into training,
+# producing artificially optimistic error estimates.
+
+# %%
+fig, axes = plt.subplots(len(logs), 3, figsize=(16, 3.5 * len(logs)))
+if len(logs) == 1:
+    axes = axes.reshape(1, -1)
+max_lags = 200
+
+for i, lid in enumerate(logs):
+    grp = df[df["log_id"] == lid]
+    # Only use continuous segments (no large gaps)
+    ts = grp["timestamp"].values
+    dt_us = np.diff(ts)
+    # Find longest continuous segment (all intervals < 10 ms)
+    gap_idx = np.where(dt_us > 10_000)[0]
+    if len(gap_idx) > 0:
+        boundaries = np.concatenate([[-1], gap_idx, [len(grp) - 1]])
+        seg_lengths = np.diff(boundaries)
+        best_seg = np.argmax(seg_lengths)
+        start = boundaries[best_seg] + 1
+        end = boundaries[best_seg + 1] + 1
+    else:
+        start, end = 0, len(grp)
+    seg = grp.iloc[start:end]
+
+    for j, c in enumerate(target_cols):
+        ax = axes[i, j]
+        vals = seg[c].values
+        if len(vals) > max_lags + 1:
+            autocorr = [np.corrcoef(vals[:-lag], vals[lag:])[0, 1] for lag in range(1, max_lags + 1)]
+            ax.bar(range(1, max_lags + 1), autocorr, width=1.0, alpha=0.7, color="#2980b9")
+        ax.set_ylim(-0.2, 1.05)
+        ax.axhline(0, color="gray", linestyle=":", alpha=0.5)
+        if i == 0:
+            ax.set_title(c.replace("target_delta_v_", "Δv_"), fontsize=10)
+        if j == 0:
+            ax.set_ylabel(f"{lid[:6]}\nAutocorr")
+        if i == len(logs) - 1:
+            ax.set_xlabel("Lag (rows)")
+
+fig.suptitle("Autocorrelation of Target Residuals (longest continuous segment per log)",
+             fontsize=12, y=1.01)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "target_autocorrelation.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# **Key implication**: If autocorrelation remains high for tens or hundreds
+# of lags, a random row-wise train/test split would allow near-identical
+# rows to appear in both sets. Proper evaluation requires time-based or
