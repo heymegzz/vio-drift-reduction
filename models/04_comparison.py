@@ -34,11 +34,11 @@ import seaborn as sns
 # Allow imports from repo root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import (
+from src.utils import (
     load_dataset, log_based_split, compute_metrics,
     TARGET_COLUMNS, TARGET_LABELS, ensure_dirs,
 )
-from feature_engineering import engineer_features, get_feature_columns
+from src.feature_engineering import engineer_features, get_feature_columns
 
 
 def plot_metric_bar(df_metrics, metric_prefix, title, ylabel, save_path, palette="viridis"):
@@ -107,15 +107,32 @@ def generate_markdown_report(metrics_table, save_path):
     md = []
     md.append("# Phase 1: Machine Learning Model Comparison Report\n")
     md.append("## 1. Executive Summary\n")
-    md.append("This report benchmarks three classical machine learning architectures for predicting "
-              "velocity drift residuals ($\Delta v_N, \Delta v_E, \Delta v_D$) in GNSS-denied UAV navigation "
-              "using exclusively IMU-derived features.\n")
+    md.append(r"This report benchmarks three classical machine learning architectures for predicting "
+              r"velocity drift residuals ($\Delta v_N, \Delta v_E, \Delta v_D$) in GNSS-denied UAV navigation "
+              r"using exclusively IMU-derived features." + "\n")
     md.append("Evaluation was conducted on the held-out test flight (`log_54`, 8,306 samples):\n")
 
-    # Table
-    md.append(metrics_table.to_markdown(index=False))
+    # Table with fallback if tabulate is not installed
+    try:
+        md.append(metrics_table.to_markdown(index=False))
+    except (ImportError, Exception):
+        headers = list(metrics_table.columns)
+        header_row = "| " + " | ".join(headers) + " |"
+        sep_row = "| " + " | ".join(["---"] * len(headers)) + " |"
+        rows = [header_row, sep_row]
+        for _, row in metrics_table.iterrows():
+            formatted = []
+            for col in headers:
+                val = row[col]
+                if isinstance(val, (float, np.floating)):
+                    formatted.append(f"{val:.6f}")
+                else:
+                    formatted.append(str(val))
+            rows.append("| " + " | ".join(formatted) + " |")
+        md.append("\n".join(rows))
+
     md.append("\n\n## 2. Model Performance Analysis\n")
-    
+
     best_rmse_model = metrics_table.loc[metrics_table["rmse_mean"].idxmin()]["model"]
     best_rmse = metrics_table["rmse_mean"].min()
     best_r2_model = metrics_table.loc[metrics_table["r2_mean"].idxmax()]["model"]
@@ -124,9 +141,9 @@ def generate_markdown_report(metrics_table, save_path):
     md.append(f"- **Non-linear vs. Linear Comparison:** Tree-based ensemble methods (Random Forest and Gradient Boosting) "
               f"substantially outperform the linear Ridge baseline, demonstrating that inertial drift residuals "
               f"contain significant non-linear dynamics from body rotations and centrifugal accelerations.\n")
-    md.append("- **Axis Breakdown:** Across all models, vertical residual ($\Delta v_D$) exhibits higher variance "
-              "due to gravity coupling and vertical aerodynamic effects, while horizontal velocity residuals "
-              "($\Delta v_N, \Delta v_E$) achieve tighter error bounds.\n")
+    md.append(r"- **Axis Breakdown:** Across all models, vertical residual ($\Delta v_D$) exhibits higher variance "
+              r"due to gravity coupling and vertical aerodynamic effects, while horizontal velocity residuals "
+              r"($\Delta v_N, \Delta v_E$) achieve tighter error bounds." + "\n")
 
     md.append("\n## 3. Artifacts and Reproducibility\n")
     md.append("- Detailed bar charts and time-series overlays are stored under `results/plots/`.\n")
@@ -206,8 +223,8 @@ def main():
     print(df_metrics[["model", "rmse_mean", "mae_mean", "r2_mean"]].to_string(index=False))
 
     # 4. Save metrics table
-    df_metrics.to_csv("results/metrics_table.csv", index=False)
-    print("\n  Saved results/metrics_table.csv")
+    df_metrics.to_csv("results/models/metrics_table.csv", index=False)
+    print("\n  Saved results/models/metrics_table.csv")
 
     # 5. Visualizations
     print("\n4. Generating benchmark comparison plots...")
@@ -219,7 +236,7 @@ def main():
                         "results/plots/comparison_timeseries_all_models.png")
 
     # 6. Generate markdown report
-    generate_markdown_report(df_metrics, "results/model_comparison_report.md")
+    generate_markdown_report(df_metrics, "results/models/model_comparison_report.md")
 
     print(f"\n{'='*60}")
     print("  Phase 1 Benchmark Complete!")

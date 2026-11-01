@@ -1,4 +1,4 @@
-.PHONY: help test data train benchmark clean
+.PHONY: help test data train benchmark clean all
 
 help:
 	@echo "VIO Drift Reduction - Makefile Commands"
@@ -6,10 +6,11 @@ help:
 	@echo "  make data        Run feature engineering & split verification"
 	@echo "  make train       Train all ML models (Ridge, RF, GBM)"
 	@echo "  make benchmark   Run multi-model comparison & generate report"
+	@echo "  make all         Run full pipeline (data → train → benchmark)"
 	@echo "  make clean       Remove python caches and temporary artifacts"
 
 test:
-	python3 -m unittest discover -s tests -p "test_*.py"
+	python3 -W ignore -m unittest discover -s tests -p "test_*.py"
 
 data:
 	python3 models/00_data_preparation.py
@@ -22,7 +23,8 @@ train:
 benchmark:
 	python3 models/04_comparison.py
 
+all: data train benchmark
+
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
-

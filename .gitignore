@@ -30,3 +30,7 @@ Thumbs.db
 # Temporary / scratch
 *.tmp
 scratch/
+
+# Generated feature datasets (keep raw data, ignore engineered outputs)
+feature_engineered_dataset.csv
+

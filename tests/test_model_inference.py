@@ -11,7 +11,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import compute_metrics, TARGET_COLUMNS
+from src.utils import compute_metrics, TARGET_COLUMNS
 
 
 class TestModelInference(unittest.TestCase):

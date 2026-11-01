@@ -9,18 +9,18 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import (
+from src.utils import (
     load_dataset, log_based_split, IMU_FEATURES, LEAKY_COLUMNS,
     TARGET_COLUMNS, TRAIN_LOGS, VAL_LOGS, TEST_LOGS,
 )
-from feature_engineering import engineer_features, get_feature_columns
+from src.feature_engineering import engineer_features, get_feature_columns
 
 
 class TestFeatureEngineering(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.raw_dataset = load_dataset("imu_drift_feature_dataset.csv")
+        cls.raw_dataset = load_dataset()
 
     def test_dataset_completeness(self):
         """Verify that the raw dataset has expected columns and no NaNs."""

@@ -2,7 +2,7 @@
 
 ## Title: ML-Assisted IMU Drift Reduction for GNSS-Denied UAV Navigation
 **Course:** CSAI Project — Phase 1 Evaluation  
-**Team Authors:** Pranjal Shukla, Shreya Narayani  
+**Team Authors:** Meghna Nair, Pranjal Shukla, Shreya Narayani  
 **Framework:** Open-source Python (Scikit-Learn, Pandas, NumPy, Matplotlib)
 
 ---
@@ -59,7 +59,7 @@
 ---
 
 ## Slide 6: Benchmark Results & Cross-Model Comparison
-*(See results/metrics_table.csv for full values)*
+*(See results/models/metrics_table.csv for full values)*
 
 | Model | Test RMSE Mean (m/s) | Test MAE Mean (m/s) | Test $R^2$ Mean | Horizontal $\Delta v_{N,E}$ RMSE |
 |---|---|---|---|---|

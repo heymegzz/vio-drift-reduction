@@ -31,7 +31,7 @@ All models were trained on `log_51` + `log_53` (22,004 rows), validated on `log_
 
 | Property | Value |
 |---|---|
-| File | `imu_drift_feature_dataset.csv` |
+| File | `data/imu_drift_feature_dataset.csv` |
 | Total Rows | 38,967 |
 | Native Columns | 31 (1 string, 30 numeric) |
 | Engineered Features | **142 input features** (IMU-only, leakage-safe) |
@@ -50,7 +50,7 @@ Because velocity residuals exhibit strong temporal autocorrelation over multiple
 
 ## Feature Engineering Pipeline
 
-The pipeline ([`feature_engineering.py`](feature_engineering.py)) transforms 8 raw IMU channels into 142 features computed strictly **per flight log**:
+The pipeline ([`src/feature_engineering.py`](src/feature_engineering.py)) transforms 8 raw IMU channels into 142 features computed strictly **per flight log**:
 
 - **Rolling Statistics:** Windows of 10, 50, and 100 samples (~50ms, 250ms, 500ms) for moving mean, standard deviation, and dynamic range.
 - **Temporal Derivatives:** First-order differences (rate of change) and second-order acceleration jerk ($d^2a/dt^2$).
@@ -63,40 +63,63 @@ The pipeline ([`feature_engineering.py`](feature_engineering.py)) transforms 8 r
 ## Repository Structure
 
 ```
-├── configs/                          # Hyperparameters & training configurations
+├── data/                               # Dataset
+│   └── imu_drift_feature_dataset.csv   # Raw telemetry (38,967 × 31)
+├── src/                                # Shared library code
+│   ├── __init__.py
+│   ├── feature_engineering.py          # End-to-end feature engineering pipeline
+│   └── utils.py                        # Evaluation metrics, data loading & splitting
+├── models/                             # Training & evaluation scripts
+│   ├── 00_data_preparation.py          # Data loading, feature eng & split auditing
+│   ├── 01_ridge_regression.py          # Multi-output Ridge regression baseline
+│   ├── 02_random_forest.py             # Multi-output Random Forest ensemble
+│   ├── 03_gradient_boosting.py         # Multi-output HistGradientBoosting regressor
+│   └── 04_comparison.py               # Cross-model evaluation & benchmark plots
+├── notebooks/                          # Interactive analysis notebooks
+│   ├── 01_dataset_eda.py               # EDA (Jupytext percent-format source)
+│   ├── 01_dataset_eda.ipynb            # EDA (Jupyter notebook)
+│   ├── 02_model_benchmark.py           # Model benchmark (Jupytext source)
+│   └── 02_model_benchmark.ipynb        # Model benchmark (Jupyter notebook)
+├── configs/                            # Hyperparameters & training configurations
 │   ├── ridge_config.json
 │   ├── rf_config.json
 │   └── gbm_config.json
-├── docs/                             # Academic & technical documentation
-│   ├── data_dictionary.md            # Column-level telemetry schema
-│   ├── target_definition.md          # Velocity residual derivations & caveats
-│   ├── eda_report.md                 # Full exploratory data analysis report
-│   ├── literature_review.md          # Survey of 12 academic papers
-│   ├── theoretical_rigor.md          # Mathematical formulas & model justifications
-│   ├── project_presentation.md       # Slide deck notes & viva voce Q&A
-│   └── project_report_ieee.tex       # Complete IEEE format conference paper
-├── models/                           # Pipelines & model implementations
-│   ├── utils.py                      # Shared evaluation metrics & dataset loaders
-│   ├── 00_data_preparation.py        # Data loading, feature eng & split auditing
-│   ├── 01_ridge_regression.py        # Multi-output Ridge regression baseline
-│   ├── 02_random_forest.py           # Multi-output Random Forest ensemble
-│   ├── 03_gradient_boosting.py       # Multi-output HistGradientBoosting regressor
-│   └── 04_comparison.py              # Cross-model evaluation & benchmark plots
-├── results/                          # Benchmark tables & figures
-│   ├── metrics_table.csv             # Combined model benchmark metrics
-│   ├── model_comparison_report.md    # Analysis of results
-│   ├── rf_feature_importances.csv    # Gini importance scores
-│   ├── split_info.csv                # Dataset partition statistics
-│   ├── eda/                          # Exploratory analysis figures & tables
-│   └── plots/                        # Model evaluation & comparison plots
+├── docs/                               # Academic & technical documentation
+│   ├── data_dictionary.md              # Column-level telemetry schema
+│   ├── target_definition.md            # Velocity residual derivations & caveats
+│   ├── eda_report.md                   # Full exploratory data analysis report
+│   ├── literature_review.md            # Survey of 12 academic papers
+│   ├── theoretical_rigor.md            # Mathematical formulas & model justifications
+│   ├── project_presentation.md         # Slide deck notes & viva voce Q&A
+│   ├── project_report_ieee.tex         # Complete IEEE format conference paper
+│   └── references.bib                  # BibTeX bibliography
+├── results/                            # All experimental outputs
+│   ├── eda/                            # Exploratory analysis
+│   │   ├── figures/                    # EDA diagnostic plots (11 figures)
+│   │   └── tables/                     # EDA summary tables (9 tables)
+│   ├── models/                         # Model evaluation metrics & reports
+│   │   ├── metrics_table.csv           # Combined benchmark metrics
+│   │   ├── model_comparison_report.md  # Analysis of results
+│   │   ├── split_info.csv              # Dataset partition statistics
+│   │   ├── ridge_metrics.csv
+│   │   ├── ridge_coefficients.csv
+│   │   ├── rf_metrics.csv
+│   │   ├── rf_feature_importances.csv
+│   │   └── gbm_metrics.csv
+│   └── plots/                          # Model evaluation & comparison plots
 │       ├── comparison_rmse_bar.png
 │       ├── comparison_mae_bar.png
 │       ├── comparison_timeseries_all_models.png
 │       ├── rf_feature_importance.png
-│       └── ...
-├── saved_models/                     # Pickled model checkpoints & fitted scalers
-├── feature_engineering.py            # End-to-end feature engineering pipeline
-├── requirements.txt                  # Python package dependencies
+│       └── ...                         # Per-model scatter, residual, timeseries plots
+├── saved_models/                       # Pickled model checkpoints & fitted scalers
+├── tests/                              # Unit test suite
+│   ├── __init__.py
+│   ├── test_feature_engineering.py     # Feature pipeline & leakage safeguard tests
+│   └── test_model_inference.py         # Model loading & prediction shape tests
+├── .github/workflows/ci.yml           # GitHub Actions CI pipeline
+├── Makefile                            # Build automation targets
+├── requirements.txt                    # Python package dependencies
 └── README.md
 ```
 
@@ -107,24 +130,46 @@ The pipeline ([`feature_engineering.py`](feature_engineering.py)) transforms 8 r
 ```bash
 # 1. Setup virtual environment
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate       # Linux/macOS
+# .venv\Scripts\activate        # Windows
+
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 2. Run data preparation and verify split integrity
+# 3. Run the EDA notebook (exploratory data analysis)
+jupyter notebook notebooks/01_dataset_eda.ipynb
+# Or run the Python source directly:
+#   cd notebooks && python 01_dataset_eda.py
+
+# 4. Run data preparation and verify split integrity
 python3 models/00_data_preparation.py
 
-# 3. Train models
+# 5. Train models
 python3 models/01_ridge_regression.py
 python3 models/02_random_forest.py
 python3 models/03_gradient_boosting.py
 
-# 4. Generate comparison benchmark tables and plots
+# 6. Generate comparison benchmark tables and plots
 python3 models/04_comparison.py
 ```
+
+All saved figures, tables, and model metrics are checked into the `results/` directory.
+
+For detailed EDA findings, see [`docs/eda_report.md`](docs/eda_report.md).
+For column-level documentation, see [`docs/data_dictionary.md`](docs/data_dictionary.md).
+For target variable definitions, see [`docs/target_definition.md`](docs/target_definition.md).
+For the literature survey, see [`docs/literature_review.md`](docs/literature_review.md).
 
 ---
 
 ## Authors & Contributions
 
-- **Pranjal Shukla:** Data pipeline architecture, exploratory data analysis, leakage quarantine, feature engineering, and Ridge regression baseline.
+- **Meghna Nair:** Dataset understanding, quality assessment, target verification, exploratory data analysis (EDA), data dictionary, and EDA report documentation.
+- **Pranjal Shukla:** Data pipeline architecture, leakage quarantine, feature engineering, and Ridge regression baseline.
 - **Shreya Narayani:** Random Forest ensemble, Gradient Boosting implementation, model comparison benchmark, theoretical justifications, and project presentation/report.
+
+---
+
+## License
+
+This project is part of an academic coursework submission.

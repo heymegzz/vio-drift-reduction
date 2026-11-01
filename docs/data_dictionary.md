@@ -1,6 +1,6 @@
 # Data Dictionary
 
-## Dataset: `imu_drift_feature_dataset.csv`
+## Dataset: `data/imu_drift_feature_dataset.csv`
 
 This document describes every column in the dataset. Information about units
 and frames is inferred from column naming conventions consistent with PX4

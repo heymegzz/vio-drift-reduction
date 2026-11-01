@@ -32,12 +32,12 @@ from sklearn.preprocessing import StandardScaler
 # Allow imports from repo root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import (
+from src.utils import (
     load_dataset, log_based_split, compute_metrics, print_metrics,
     metrics_to_dataframe, TARGET_COLUMNS, TARGET_LABELS,
     TRAIN_LOGS, ensure_dirs,
 )
-from feature_engineering import engineer_features, get_feature_columns
+from src.feature_engineering import engineer_features, get_feature_columns
 
 
 def plot_predictions(y_true, y_pred, split_name, save_path):
@@ -187,8 +187,8 @@ def main():
         "feature": feature_cols,
         "importance": importances
     }).sort_values("importance", ascending=False)
-    fi_df.to_csv("results/rf_feature_importances.csv", index=False)
-    print("   Saved results/rf_feature_importances.csv")
+    fi_df.to_csv("results/models/rf_feature_importances.csv", index=False)
+    print("   Saved results/models/rf_feature_importances.csv")
 
     # 7. Save model & config
     print("\n5. Saving model artifacts...")
@@ -214,8 +214,8 @@ def main():
     print("   Saved configs/rf_config.json")
 
     metrics_df = metrics_to_dataframe(test_metrics, "Random Forest")
-    metrics_df.to_csv("results/rf_metrics.csv", index=False)
-    print("   Saved results/rf_metrics.csv")
+    metrics_df.to_csv("results/models/rf_metrics.csv", index=False)
+    print("   Saved results/models/rf_metrics.csv")
 
     # 8. Visualizations
     print("\n6. Generating visualizations...")

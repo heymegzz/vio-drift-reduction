@@ -34,12 +34,16 @@
 
 # %%
 import os
+import sys
 import hashlib
 import warnings
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib
+if "ipykernel" not in sys.modules:
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -48,8 +52,11 @@ pd.set_option("display.max_columns", 40)
 pd.set_option("display.width", 120)
 sns.set_theme(style="whitegrid", context="notebook", palette="deep")
 
-FIGURES_DIR = Path("../results/eda/figures")
-TABLES_DIR  = Path("../results/eda/tables")
+REPO_ROOT = Path(__file__).resolve().parent.parent if "__file__" in globals() else (
+    Path.cwd() if (Path.cwd() / "data").exists() else Path.cwd().parent
+)
+FIGURES_DIR = REPO_ROOT / "results" / "eda" / "figures"
+TABLES_DIR  = REPO_ROOT / "results" / "eda" / "tables"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 TABLES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -57,7 +64,7 @@ TABLES_DIR.mkdir(parents=True, exist_ok=True)
 # ### 1.1 Locate and load the dataset
 
 # %%
-DATASET_PATH = Path("../imu_drift_feature_dataset.csv")
+DATASET_PATH = REPO_ROOT / "data" / "imu_drift_feature_dataset.csv"
 assert DATASET_PATH.exists(), f"Dataset not found at {DATASET_PATH.resolve()}"
 
 file_size_bytes = DATASET_PATH.stat().st_size
@@ -689,7 +696,10 @@ fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 for i, c in enumerate(target_cols):
     ax = axes[i]
     data_by_log = [df[df["log_id"] == lid][c].values for lid in logs]
-    bp = ax.boxplot(data_by_log, labels=[lid[:6] for lid in logs], patch_artist=True)
+    try:
+        bp = ax.boxplot(data_by_log, tick_labels=[lid[:6] for lid in logs], patch_artist=True)
+    except TypeError:
+        bp = ax.boxplot(data_by_log, labels=[lid[:6] for lid in logs], patch_artist=True)
     colors = ["#3498db", "#e74c3c", "#2ecc71", "#f39c12"]
     for patch, color in zip(bp["boxes"], colors):
         patch.set_facecolor(color)

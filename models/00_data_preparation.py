@@ -29,11 +29,11 @@ import pandas as pd
 # Allow imports from repo root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import (
+from src.utils import (
     load_dataset, log_based_split, TARGET_COLUMNS,
     TRAIN_LOGS, VAL_LOGS, TEST_LOGS, ensure_dirs,
 )
-from feature_engineering import engineer_features, get_feature_columns
+from src.feature_engineering import engineer_features, get_feature_columns
 
 
 def verify_no_leakage(df_train, df_val, df_test):
@@ -105,8 +105,8 @@ def main():
         "n_rows": [len(df_train), len(df_val), len(df_test)],
         "n_features": [len(feature_cols)] * 3,
     })
-    split_info.to_csv("results/split_info.csv", index=False)
-    print(f"\n   Saved split info to results/split_info.csv")
+    split_info.to_csv("results/models/split_info.csv", index=False)
+    print(f"\n   Saved split info to results/models/split_info.csv")
 
     # 7. Target statistics per split
     print("\n6. Target statistics per split:")

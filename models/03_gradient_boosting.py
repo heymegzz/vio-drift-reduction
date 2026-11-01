@@ -33,12 +33,12 @@ from sklearn.preprocessing import StandardScaler
 # Allow imports from repo root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import (
+from src.utils import (
     load_dataset, log_based_split, compute_metrics, print_metrics,
     metrics_to_dataframe, TARGET_COLUMNS, TARGET_LABELS,
     TRAIN_LOGS, ensure_dirs,
 )
-from feature_engineering import engineer_features, get_feature_columns
+from src.feature_engineering import engineer_features, get_feature_columns
 
 
 def plot_predictions(y_true, y_pred, split_name, save_path):
@@ -188,8 +188,8 @@ def main():
     print("   Saved configs/gbm_config.json")
 
     metrics_df = metrics_to_dataframe(test_metrics, "Gradient Boosting")
-    metrics_df.to_csv("results/gbm_metrics.csv", index=False)
-    print("   Saved results/gbm_metrics.csv")
+    metrics_df.to_csv("results/models/gbm_metrics.csv", index=False)
+    print("   Saved results/models/gbm_metrics.csv")
 
     # 7. Visualizations
     print("\n6. Generating visualizations...")

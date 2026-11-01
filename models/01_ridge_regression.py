@@ -44,12 +44,12 @@ from sklearn.model_selection import ParameterGrid
 # Allow imports from repo root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.utils import (
+from src.utils import (
     load_dataset, log_based_split, compute_metrics, print_metrics,
     metrics_to_dataframe, TARGET_COLUMNS, TARGET_LABELS,
     TRAIN_LOGS, ensure_dirs,
 )
-from feature_engineering import engineer_features, get_feature_columns
+from src.feature_engineering import engineer_features, get_feature_columns
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -315,8 +315,8 @@ def main():
 
     # Save metrics
     metrics_df = metrics_to_dataframe(test_metrics, "Ridge Regression")
-    metrics_df.to_csv("results/ridge_metrics.csv", index=False)
-    print("   Saved results/ridge_metrics.csv")
+    metrics_df.to_csv("results/models/ridge_metrics.csv", index=False)
+    print("   Saved results/models/ridge_metrics.csv")
 
     # Save coefficients
     coef_df = pd.DataFrame(
@@ -326,8 +326,8 @@ def main():
     )
     coef_df["abs_mean"] = coef_df.abs().mean(axis=1)
     coef_df = coef_df.sort_values("abs_mean", ascending=False)
-    coef_df.to_csv("results/ridge_coefficients.csv")
-    print("   Saved results/ridge_coefficients.csv")
+    coef_df.to_csv("results/models/ridge_coefficients.csv")
+    print("   Saved results/models/ridge_coefficients.csv")
 
     # 7. Generate plots
     print("\n7. Generating visualizations...")

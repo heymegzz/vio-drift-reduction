@@ -18,16 +18,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sys.path.insert(0, os.path.abspath('..'))
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if '__file__' in globals() else os.path.abspath('..')
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
 
-from models.utils import load_dataset, log_based_split, compute_metrics, TARGET_COLUMNS, TARGET_LABELS
-from feature_engineering import engineer_features, get_feature_columns
+from src.utils import load_dataset, log_based_split, compute_metrics, TARGET_COLUMNS, TARGET_LABELS
+from src.feature_engineering import engineer_features, get_feature_columns
 
 # %% [markdown]
 # ## 1. Load Dataset & Feature Engineering Pipeline
 
 # %%
-df_raw = load_dataset('../imu_drift_feature_dataset.csv')
+df_raw = load_dataset()
 print(f"Raw dataset: {df_raw.shape[0]:,} rows x {df_raw.shape[1]} columns")
 
 df_featured = engineer_features(df_raw, verbose=True)
@@ -48,13 +50,16 @@ print(f"Test set (log_54): {len(df_test):,} samples")
 # ## 3. Load Trained Model Checkpoints & Evaluate
 
 # %%
+models_dir = os.path.join(repo_root, "saved_models")
 models = {}
 scalers = {}
-for name, m_path, s_path in [
-    ('Ridge', '../saved_models/ridge_model.pkl', '../saved_models/ridge_scaler.pkl'),
-    ('Random Forest', '../saved_models/rf_model.pkl', '../saved_models/rf_scaler.pkl'),
-    ('Gradient Boosting', '../saved_models/gbm_model.pkl', '../saved_models/gbm_scaler.pkl')
+for name, m_name, s_name in [
+    ('Ridge', 'ridge_model.pkl', 'ridge_scaler.pkl'),
+    ('Random Forest', 'rf_model.pkl', 'rf_scaler.pkl'),
+    ('Gradient Boosting', 'gbm_model.pkl', 'gbm_scaler.pkl')
 ]:
+    m_path = os.path.join(models_dir, m_name)
+    s_path = os.path.join(models_dir, s_name)
     with open(m_path, 'rb') as f:
         models[name] = pickle.load(f)
     with open(s_path, 'rb') as f:

@@ -10,7 +10,7 @@
 
 | Property | Value |
 |----------|-------|
-| File | `imu_drift_feature_dataset.csv` |
+| File | `data/imu_drift_feature_dataset.csv` |
 | Rows | 38,967 |
 | Columns | 31 (1 string, 30 numeric) |
 | Size | ~12 MB |
