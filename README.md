@@ -2,28 +2,40 @@
 
 ## Project Background
 
-Unmanned aerial vehicles (UAVs) rely on inertial measurement units (IMUs) for attitude and velocity estimation. In GNSS-denied environments—indoors, urban canyons, or under deliberate jamming—the inertial navigation solution drifts over time due to sensor bias, noise, and integration error. This project investigates whether machine-learning models can predict the velocity residual between a PX4 estimator output and GPS reference measurements ($\Delta v_N, \Delta v_E, \Delta v_D$), with the long-term goal of applying learned corrections during GNSS outages.
+Unmanned aerial vehicles (UAVs) rely on inertial measurement units (IMUs) for attitude and velocity estimation. In GNSS-denied environments—indoors, urban canyons, or under deliberate jamming—the inertial navigation solution drifts over time due to sensor bias, noise, and integration error. This project investigates whether machine-learning models can predict the velocity residual between a PX4 estimator output and GPS reference measurements (Δv_N, Δv_E, Δv_D), with the long-term goal of applying learned corrections during GNSS outages.
+
+> **Important caveat:** The PX4 velocity estimates were recorded from the PX4 EKF2 estimator, which likely used GPS aiding during the flight. Removing GPS *input features* from the ML model does **not** remove GPS dependence from the recorded PX4 estimator output. This experiment should be described as *PX4–GPS velocity residual prediction using IMU-derived features*, not as validated GNSS-denied or IMU-only drift reduction. See [`docs/target_definition.md`](docs/target_definition.md) for a full discussion.
 
 ---
 
 ## Phase 1: Machine Learning Benchmark
 
-In Phase 1, we implement, benchmark, and evaluate **3 classical machine learning models** trained exclusively on leakage-safe IMU features:
-1. **Ridge Regression** (Multi-output $L_2$ regularized linear baseline)
-2. **Random Forest Regressor** (De-correlated bagged tree ensemble)
+In Phase 1, we implement, benchmark, and evaluate **3 classical ML models** and **2 baselines** trained exclusively on leakage-safe IMU features:
+
+**Baselines:**
+- **Zero Correction** — predicted residual = 0 (leave PX4 velocity uncorrected)
+- **Mean Predictor** — predicted residual = training-set target mean
+
+**ML Models:**
+1. **Ridge Regression** (Multi-output L₂ regularized linear baseline)
+2. **Random Forest Regressor** (Bagged tree ensemble)
 3. **Histogram Gradient Boosting** (Stage-wise additive tree booster)
 
-### Benchmark Summary on Unseen Test Flight (`log_54`)
+### Benchmark Summary on Test Flight (`log_54`)
 
-All models were trained on `log_51` + `log_53` (22,004 rows), validated on `log_52` (8,657 rows), and evaluated on the held-out `log_54` flight (8,306 rows, 57.6 s):
+All models were trained on `log_51` + `log_53` (22,004 rows), validated on `log_52` (8,657 rows), and evaluated on the held-out `log_54` flight (8,306 rows):
 
-| Model | Test RMSE (m/s) | Test MAE (m/s) | Test $R^2$ | RMSE $\Delta v_N$ | RMSE $\Delta v_E$ | RMSE $\Delta v_D$ | Latency (ms) |
-|---|---|---|---|---|---|---|---|
-| **Random Forest** | **0.1603** | **0.1155** | **-0.1319** | **0.1003** | **0.1017** | **0.2789** | 1.25 ms |
-| **Gradient Boosting** | 0.1682 | 0.1241 | -0.2541 | 0.1063 | 0.1081 | 0.2901 | 0.42 ms |
-| **Ridge Regression** | 0.1734 | 0.1315 | -0.3726 | 0.1155 | 0.1161 | 0.2885 | **0.05 ms** |
+| Model | RMSE (m/s) | MAE (m/s) | R² | Bias (m/s) |
+|---|---|---|---|---|
+| **Zero Correction** | **0.1472** | **0.1065** | **-0.013** | 0.017 |
+| Random Forest | 0.1626 | 0.1189 | -0.171 | 0.058 |
+| Gradient Boosting | 0.1684 | 0.1252 | -0.255 | 0.064 |
+| Mean Predictor | 0.1699 | 0.1268 | -0.239 | 0.069 |
+| Ridge Regression | 0.1746 | 0.1319 | -0.387 | 0.070 |
 
-> **Key Observation:** Tree ensembles significantly improve upon the linear Ridge baseline, demonstrating positive $R^2$ on horizontal axes ($\Delta v_N, \Delta v_E$) and confirming non-linear kinematic couplings.
+> **Key finding:** No ML model achieves lower RMSE than zero correction on this test flight. Applying any of the trained corrections **worsens** the overall velocity estimate compared to leaving PX4 output uncorrected. All R² values are negative, meaning every model performs worse than predicting the target mean.
+
+> This is a common outcome when residuals are small, noisy, and weakly correlated with the available IMU features. The result is reported honestly as a negative finding and serves as a reproducible benchmark for Phase 2.
 
 ---
 
@@ -46,16 +58,20 @@ Because velocity residuals exhibit strong temporal autocorrelation over multiple
 - **Validation:** `log_52` (8,657 rows, 22.2%)
 - **Test:** `log_54` (8,306 rows, 21.3%)
 
+> **Note:** `log_54` has already been inspected during development and is no longer a pristine unseen test. A new independent recording is recommended for stronger confirmation.
+
 ---
 
 ## Feature Engineering Pipeline
 
-The pipeline ([`src/feature_engineering.py`](src/feature_engineering.py)) transforms 8 raw IMU channels into 142 features computed strictly **per flight log**:
+The pipeline ([`src/feature_engineering.py`](src/feature_engineering.py)) transforms 8 raw IMU channels into 142 features computed strictly **per continuous segment**:
 
-- **Rolling Statistics:** Windows of 10, 50, and 100 samples (~50ms, 250ms, 500ms) for moving mean, standard deviation, and dynamic range.
-- **Temporal Derivatives:** First-order differences (rate of change) and second-order acceleration jerk ($d^2a/dt^2$).
-- **Lag States:** Prior observations at $t-1$, $t-5$, $t-10$.
-- **Kinematic Cross-Axis Interactions:** Planar tilt angles ($\text{atan2}$) and specific force to angular rate ratios.
+- **Gap Detection:** Timestamps are in microseconds. Intervals > 50 ms (~10× the median 5 ms cadence) are treated as temporal discontinuities. Each log is split into continuous segments; all temporal features are reset at segment boundaries.
+- **Rolling Statistics:** Sample-count windows of 10, 50, and 100 (~50 ms, 250 ms, 500 ms at 200 Hz) for moving mean, standard deviation, and dynamic range.
+- **Temporal Derivatives:** First-order differences (rate of change).
+- **Jerk:** da/dt computed using actual elapsed time between consecutive samples (m/s³), not second-order differencing.
+- **Lag States:** Prior observations at t−1, t−5, t−10 samples. Startup rows are forward-filled (causal — no future leakage).
+- **Kinematic Cross-Axis Interactions:** Planar tilt angles (atan2) and specific force to angular rate ratios.
 - **Leakage Quarantine:** All GPS coordinates, GPS velocities, satellite counts, quality metrics (EPH/EPV), and estimator flags are permanently excluded.
 
 ---
@@ -74,7 +90,7 @@ The pipeline ([`src/feature_engineering.py`](src/feature_engineering.py)) transf
 │   ├── 01_ridge_regression.py          # Multi-output Ridge regression baseline
 │   ├── 02_random_forest.py             # Multi-output Random Forest ensemble
 │   ├── 03_gradient_boosting.py         # Multi-output HistGradientBoosting regressor
-│   └── 04_comparison.py               # Cross-model evaluation & benchmark plots
+│   └── 04_comparison.py               # Cross-model benchmark with baselines
 ├── notebooks/                          # Interactive analysis notebooks
 │   ├── 01_dataset_eda.py               # EDA (Jupytext percent-format source)
 │   ├── 01_dataset_eda.ipynb            # EDA (Jupyter notebook)
@@ -88,34 +104,28 @@ The pipeline ([`src/feature_engineering.py`](src/feature_engineering.py)) transf
 │   ├── data_dictionary.md              # Column-level telemetry schema
 │   ├── target_definition.md            # Velocity residual derivations & caveats
 │   ├── eda_report.md                   # Full exploratory data analysis report
-│   ├── literature_review.md            # Survey of 12 academic papers
+│   ├── literature_review.md            # Survey of academic papers
 │   ├── theoretical_rigor.md            # Mathematical formulas & model justifications
 │   ├── project_presentation.md         # Slide deck notes & viva voce Q&A
-│   ├── project_report_ieee.tex         # Complete IEEE format conference paper
+│   ├── project_report_ieee.tex         # IEEE format conference paper
 │   └── references.bib                  # BibTeX bibliography
 ├── results/                            # All experimental outputs
 │   ├── eda/                            # Exploratory analysis
-│   │   ├── figures/                    # EDA diagnostic plots (11 figures)
-│   │   └── tables/                     # EDA summary tables (9 tables)
+│   │   ├── figures/                    # EDA diagnostic plots
+│   │   └── tables/                     # EDA summary tables
 │   ├── models/                         # Model evaluation metrics & reports
-│   │   ├── metrics_table.csv           # Combined benchmark metrics
+│   │   ├── metrics_table.csv           # Combined benchmark with baselines
+│   │   ├── correction_evaluation.csv   # Velocity correction quality assessment
 │   │   ├── model_comparison_report.md  # Analysis of results
-│   │   ├── split_info.csv              # Dataset partition statistics
-│   │   ├── ridge_metrics.csv
-│   │   ├── ridge_coefficients.csv
-│   │   ├── rf_metrics.csv
-│   │   ├── rf_feature_importances.csv
-│   │   └── gbm_metrics.csv
+│   │   └── ...                         # Per-model metrics
 │   └── plots/                          # Model evaluation & comparison plots
+│       ├── correction_velocity_comparison.png
 │       ├── comparison_rmse_bar.png
-│       ├── comparison_mae_bar.png
-│       ├── comparison_timeseries_all_models.png
-│       ├── rf_feature_importance.png
-│       └── ...                         # Per-model scatter, residual, timeseries plots
+│       └── ...                         # Per-model scatter, residual, timeseries
 ├── saved_models/                       # Pickled model checkpoints & fitted scalers
 ├── tests/                              # Unit test suite
 │   ├── __init__.py
-│   ├── test_feature_engineering.py     # Feature pipeline & leakage safeguard tests
+│   ├── test_feature_engineering.py     # Feature pipeline, gap handling & jerk tests
 │   └── test_model_inference.py         # Model loading & prediction shape tests
 ├── .github/workflows/ci.yml           # GitHub Actions CI pipeline
 ├── Makefile                            # Build automation targets
@@ -149,7 +159,7 @@ python3 models/01_ridge_regression.py
 python3 models/02_random_forest.py
 python3 models/03_gradient_boosting.py
 
-# 6. Generate comparison benchmark tables and plots
+# 6. Generate comparison benchmark (includes baselines and correction evaluation)
 python3 models/04_comparison.py
 ```
 
