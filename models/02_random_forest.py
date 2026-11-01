@@ -88,7 +88,7 @@ def plot_feature_importance(importances, feature_names, save_path, top_n=20):
     ax.set_yticks(y_pos)
     ax.set_yticklabels([feature_names[i] for i in top_indices], fontsize=9)
     ax.invert_yaxis()
-    ax.set_xlabel("Mean Gini Importance", fontsize=11)
+    ax.set_xlabel("Mean Impurity Reduction (Variance)", fontsize=11)
     ax.set_title(f"Random Forest — Top {top_n} Feature Importances", fontsize=14)
     ax.grid(True, alpha=0.3, axis="x")
     plt.tight_layout()
