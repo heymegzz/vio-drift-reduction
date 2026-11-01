@@ -118,21 +118,31 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
 
     Returns
     -------
-    dict with keys like 'mae_N', 'rmse_N', 'r2_N', ... and mean versions.
+    dict with keys like 'mae_N', 'rmse_N', 'r2_N', 'bias_N', ...
+    and mean versions.
+
+    Notes
+    -----
+    rmse_mean is the mean of per-axis RMSEs (not pooled RMSE).
+    bias is the mean signed residual (pred − true): positive means the
+    model over-predicts.
     """
     components = ["N", "E", "D"]
     metrics = {}
 
     for i, comp in enumerate(components):
+        residuals = y_pred[:, i] - y_true[:, i]
         metrics[f"mae_{comp}"] = mean_absolute_error(y_true[:, i], y_pred[:, i])
         metrics[f"rmse_{comp}"] = np.sqrt(
             mean_squared_error(y_true[:, i], y_pred[:, i])
         )
         metrics[f"r2_{comp}"] = r2_score(y_true[:, i], y_pred[:, i])
+        metrics[f"bias_{comp}"] = float(np.mean(residuals))
 
     metrics["mae_mean"] = np.mean([metrics[f"mae_{c}"] for c in components])
     metrics["rmse_mean"] = np.mean([metrics[f"rmse_{c}"] for c in components])
     metrics["r2_mean"] = np.mean([metrics[f"r2_{c}"] for c in components])
+    metrics["bias_mean"] = np.mean([metrics[f"bias_{c}"] for c in components])
 
     return metrics
 
@@ -142,21 +152,25 @@ def print_metrics(metrics: dict, model_name: str = "Model"):
     print(f"\n{'='*60}")
     print(f"  {model_name} — Evaluation Metrics")
     print(f"{'='*60}")
-    print(f"  {'Component':<12} {'MAE':>10} {'RMSE':>10} {'R²':>10}")
-    print(f"  {'-'*42}")
+    print(f"  {'Component':<12} {'MAE':>10} {'RMSE':>10} {'R²':>10} {'Bias':>10}")
+    print(f"  {'-'*52}")
     for comp in ["N", "E", "D"]:
+        bias_str = f"{metrics.get(f'bias_{comp}', 0):>10.4f}"
         print(
             f"  Δv_{comp:<8} "
             f"{metrics[f'mae_{comp}']:>10.4f} "
             f"{metrics[f'rmse_{comp}']:>10.4f} "
             f"{metrics[f'r2_{comp}']:>10.4f}"
+            f"{bias_str}"
         )
-    print(f"  {'-'*42}")
+    print(f"  {'-'*52}")
+    bias_mean_str = f"{metrics.get('bias_mean', 0):>10.4f}"
     print(
         f"  {'Mean':<12} "
         f"{metrics['mae_mean']:>10.4f} "
         f"{metrics['rmse_mean']:>10.4f} "
         f"{metrics['r2_mean']:>10.4f}"
+        f"{bias_mean_str}"
     )
     print(f"{'='*60}\n")
 
