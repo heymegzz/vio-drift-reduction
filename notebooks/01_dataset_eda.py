@@ -833,3 +833,28 @@ plt.show()
 # **Key implication**: If autocorrelation remains high for tens or hundreds
 # of lags, a random row-wise train/test split would allow near-identical
 # rows to appear in both sets. Proper evaluation requires time-based or
+# log-based splitting strategies.
+
+# %% [markdown]
+# ---
+# ## 12. Summary
+#
+# Key findings are documented in `docs/eda_report.md`. The data dictionary
+# is in `docs/data_dictionary.md` and target definitions in
+# `docs/target_definition.md`.
+#
+# This notebook should be run from a clean kernel in order to reproduce all
+# results. Figures are saved to `results/eda/figures/` and tables to
+# `results/eda/tables/`.
+
+# %%
+# Final checksum verification — confirm dataset was not modified
+sha256_final = hashlib.sha256()
+with open(DATASET_PATH, "rb") as f:
+    for chunk in iter(lambda: f.read(1 << 16), b""):
+        sha256_final.update(chunk)
+final_checksum = sha256_final.hexdigest()
+
+print(f"Original checksum: {dataset_checksum}")
+print(f"Final checksum:    {final_checksum}")
+print(f"Dataset unchanged: {dataset_checksum == final_checksum}")
