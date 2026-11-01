@@ -10,33 +10,27 @@ investigates whether machine-learning models can predict the velocity residual
 between a PX4 estimator output and GPS reference measurements, with the
 long-term goal of applying learned corrections during GNSS outages.
 
-## Current Stage: Exploratory Data Analysis (EDA)
+## Current Stage: Phase 1 — Machine Learning
 
-This repository currently contains only the **dataset understanding, quality
-assessment, target verification, and exploratory data analysis** work. The
-objective is to thoroughly characterize the dataset before any modelling begins.
+This repository contains:
+- **Exploratory Data Analysis (EDA)** — dataset understanding, quality
+  assessment, target verification, and visualization.
+- **Feature Engineering** — leakage-safe IMU feature extraction with temporal
+  features (rolling stats, differences, lags, jerk, cross-axis interactions).
+- **Data Splitting** — log-based train/val/test split preventing temporal
+  leakage.
+- **Ridge Regression** — regularized linear baseline model with leave-one-log-out
+  cross-validation for hyperparameter tuning.
+- **Literature Review** — survey of 12+ relevant works on IMU drift reduction,
+  ML for inertial navigation, and sensor fusion.
 
-### What this stage covers
+### Models Implemented
 
-- Dataset provenance and integrity verification.
-- Schema inspection and column documentation.
-- Missing-value and duplicate auditing.
-- Recording-level sampling analysis.
-- IMU, GPS, and PX4 signal profiling.
-- Target-variable definition and numerical verification.
-- Distribution analysis and potential-outlier flagging.
-- Temporal and cross-signal visualizations.
-- Correlation structure and temporal-dependence analysis.
-- Data dictionary and full EDA report.
+| Model | Type | α / Config | Test RMSE (mean) | Test R² (mean) |
+|---|---|---|---|---|
+| **Ridge Regression** | Regularized Linear | α=1000.0 | 0.1734 m/s | -0.3726 |
 
-### What this stage does NOT demonstrate
-
-- IMU drift reduction or correction has not been achieved.
-- No model has been trained, validated, or evaluated.
-- No feature engineering, feature selection, or train/test splitting has been
-  performed.
-- No data cleaning (imputation, clipping, outlier removal) has been applied.
-- The dataset has not been regenerated or augmented.
+*Additional models (Random Forest, Gradient Boosting) to be added by collaborators.*
 
 ## Dataset
 
@@ -44,13 +38,18 @@ objective is to thoroughly characterize the dataset before any modelling begins.
 |----------|----------------------------------------------|
 | File     | `imu_drift_feature_dataset.csv` (repo root)  |
 | Rows     | 38,967                                       |
-| Columns  | 31                                           |
+| Columns  | 31 (raw) → 148 (after feature engineering)   |
+| Features | 142 input features (IMU-only, leakage-safe)  |
 | Size     | ~12 MB                                       |
 | Logs     | 4 recording segments                         |
 
-The dataset was extracted from PX4 `.ulg` flight-log files. The original
-extraction script is not included in this repository; see
-`docs/eda_report.md` for a discussion of missing provenance materials.
+### Data Split (Log-Based)
+
+| Split | Logs | Rows | Ratio |
+|-------|------|------|-------|
+| Train | log_51, log_53 | 22,004 | 56.5% |
+| Val   | log_52 | 8,657 | 22.2% |
+| Test  | log_54 | 8,306 | 21.3% |
 
 ## Repository Structure
 
@@ -59,17 +58,38 @@ README.md
 requirements.txt
 .gitignore
 imu_drift_feature_dataset.csv
-notebooks/
-  01_dataset_eda.py            # Jupytext percent-format source
-  01_dataset_eda.ipynb         # Jupyter notebook (generated from .py)
-docs/
-  data_dictionary.md
-  target_definition.md
-  eda_report.md
+feature_engineering.py            # Feature engineering pipeline
+models/
+  utils.py                        # Shared utilities (metrics, splitting, I/O)
+  00_data_preparation.py          # Data loading, feature eng, splitting verification
+  01_ridge_regression.py          # Ridge Regression training & evaluation
+configs/
+  ridge_config.json               # Saved hyperparameters
+saved_models/
+  ridge_model.pkl                 # Trained Ridge model
+  ridge_scaler.pkl                # Fitted StandardScaler
 results/
+  ridge_metrics.csv               # Test set metrics
+  ridge_coefficients.csv          # Feature coefficient analysis
+  split_info.csv                  # Train/val/test split details
+  plots/
+    ridge_alpha_search.png        # Hyperparameter tuning plot
+    ridge_scatter_test.png        # Predicted vs true (test)
+    ridge_scatter_val.png         # Predicted vs true (validation)
+    ridge_residuals_test.png      # Residual distribution (test)
+    ridge_coefficients.png        # Top feature coefficients
+    ridge_timeseries_test.png     # Time-series comparison (test)
   eda/
-    figures/          # Saved plots
-    tables/           # Exported summary tables
+    figures/                      # EDA plots
+    tables/                       # EDA summary tables
+notebooks/
+  01_dataset_eda.py               # Jupytext percent-format source
+  01_dataset_eda.ipynb            # Jupyter notebook (generated from .py)
+docs/
+  data_dictionary.md              # Column-level documentation
+  target_definition.md            # Target variable definition & caveats
+  eda_report.md                   # Full EDA findings report
+  literature_review.md            # Literature review (12 papers)
 ```
 
 ## Reproduction
@@ -77,23 +97,45 @@ results/
 ```bash
 # 1. Create and activate a virtual environment
 python3 -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .venv\Scripts\activate   # Windows
+source .venv/bin/activate
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Run the EDA notebook
+# 3. Run the EDA notebook (optional — results already saved)
 jupyter notebook notebooks/01_dataset_eda.ipynb
-# Execute all cells in order from a clean kernel.
-# Alternatively, run the Python source directly:
-#   cd notebooks && python 01_dataset_eda.py
+
+# 4. Run data preparation (feature engineering + split verification)
+python3 models/00_data_preparation.py
+
+# 5. Train and evaluate Ridge Regression
+python3 models/01_ridge_regression.py
 ```
 
-All saved figures and tables are checked into the `results/eda/` directory.
-For detailed findings, see [`docs/eda_report.md`](docs/eda_report.md).
-For column-level documentation, see [`docs/data_dictionary.md`](docs/data_dictionary.md).
-For target variable definitions, see [`docs/target_definition.md`](docs/target_definition.md).
+## Feature Engineering
+
+The pipeline (`feature_engineering.py`) transforms 8 raw IMU channels into
+142 input features:
+
+| Feature Group | Count | Description |
+|---|---|---|
+| Raw IMU | 8 | accel x/y/z, gyro x/y/z, magnitudes |
+| Rolling mean/std | 48 | Windows of 10, 50, 100 samples |
+| Rolling min/max/range | 54 | Windows of 10, 50, 100 samples |
+| First differences | 8 | Rate of change (≈ jerk for accel) |
+| Lag features | 18 | 1, 5, 10 step lags |
+| Jerk | 3 | Second-order accel differences |
+| Cross-axis | 3 | XY angles, accel/gyro magnitude ratio |
+
+All features are computed **per-log** to prevent cross-log contamination.
+GPS-derived columns are excluded to maintain GNSS-denied validity.
+
+## Documentation
+
+- [EDA Report](docs/eda_report.md) — detailed findings from exploratory analysis
+- [Data Dictionary](docs/data_dictionary.md) — column-level documentation
+- [Target Definition](docs/target_definition.md) — what the targets mean
+- [Literature Review](docs/literature_review.md) — survey of 12 relevant works
 
 ## License
 
