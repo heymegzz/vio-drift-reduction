@@ -89,3 +89,4 @@ where $\eta \in (0, 1]$ is the shrinkage factor (learning rate) and $\lambda \Om
 1. **Log-Partition Separation:** No split is performed row-wise. Flight logs `log_51` and `log_53` serve as training, `log_52` for validation/early stopping, and `log_54` is held out for unbiased testing.
 2. **Autocorrelation Protection:** Because IMU drift and velocity residuals exhibit autocorrelation over several seconds, random cross-validation artificially leaks future state information; whole-flight separation preserves real-world generalization conditions.
 3. **Exclusion of GPS-Derived Features:** All GPS velocities, satellite counts, EPH/EPV quality metrics, and estimator validity flags are strictly quarantined from model inputs.
+

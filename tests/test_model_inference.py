@@ -52,3 +52,4 @@ def test_metrics_computation():
     assert np.isclose(metrics["rmse_mean"], 0.0)
     assert np.isclose(metrics["mae_mean"], 0.0)
     assert np.isclose(metrics["r2_mean"], 1.0)
+

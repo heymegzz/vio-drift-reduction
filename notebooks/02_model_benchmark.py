@@ -72,3 +72,4 @@ for name, model in models.items():
 
 df_results = pd.DataFrame(results).sort_values('rmse_mean')
 print(df_results[['Model', 'rmse_mean', 'mae_mean', 'r2_mean', 'rmse_N', 'rmse_E', 'rmse_D']])
+

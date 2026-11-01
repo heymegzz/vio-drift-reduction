@@ -87,3 +87,4 @@
 
 ### Q4: How would this run in real time on an actual drone?
 **Answer:** Feature computation requires a sliding buffer of 100 IMU samples (0.5 seconds at 200 Hz). The Random Forest model inference latency is under 1.5 ms per sample, which easily fits within the 5 ms budget of a 200 Hz onboard companion computer (e.g., Raspberry Pi 4 or NVIDIA Jetson).
+

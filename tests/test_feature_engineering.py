@@ -72,3 +72,4 @@ def test_no_nan_in_engineered_features(raw_dataset):
 
     assert not engineered[feature_cols].isna().any().any(), "Engineered features contain NaN values"
     assert not np.isinf(engineered[feature_cols].values).any(), "Engineered features contain infinite values"
+
