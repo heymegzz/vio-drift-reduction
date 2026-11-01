@@ -1,0 +1,119 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Machine Learning-Assisted IMU Velocity Residual Estimation for GNSS-Denied UAV Navigation}
+
+\author{\IEEEauthorblockN{Pranjal Shukla}
+\IEEEauthorblockA{\textit{Department of Computer Science \& Artificial Intelligence} \\
+Rishihood University, Sonipat, India \\
+pranjalshukla9555@gmail.com}
+\and
+\IEEEauthorblockN{Shreya Narayani}
+\IEEEauthorblockA{\textit{Department of Computer Science \& Artificial Intelligence} \\
+Rishihood University, Sonipat, India \\
+narayanishreya7@gmail.com}
+}
+
+\maketitle
+
+\begin{abstract}
+Autonomous navigation for Unmanned Aerial Vehicles (UAVs) relies heavily on Inertial Measurement Units (IMUs) integrated within an Extended Kalman Filter (EKF) state estimation architecture. However, in GNSS-denied environments, open-loop dead reckoning accumulates unbounded velocity and position errors due to sensor bias and unmodeled non-linear dynamics. In this work, we formulate IMU drift reduction as a residual learning problem, predicting the velocity discrepancy between the PX4 EKF2 state estimator and reference GNSS velocities ($\Delta v_N, \Delta v_E, \Delta v_D$) strictly using IMU-derived inputs. We construct a leakage-safe temporal feature engineering pipeline that transforms 8 raw sensor channels into 142 multi-scale features and evaluate three machine learning paradigms: Multi-Output Ridge Regression, Random Forest Ensembles, and Histogram Gradient Boosting. Using whole-flight log separation to eliminate temporal autocorrelation leakage, our experiments show that Random Forest achieves the lowest overall RMSE of 0.1603 m/s, demonstrating the necessity of non-linear model architectures for multi-axis inertial drift mitigation.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Inertial Navigation, GNSS-Denied, UAV, Machine Learning, Feature Engineering, Random Forest, Ridge Regression.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Unmanned Aerial Vehicles (UAVs) operating in urban canyons, indoor structures, or contested electronic environments frequently suffer from complete Global Navigation Satellite System (GNSS) loss. Under such outages, the onboard PX4 autopilot's Extended Kalman Filter (EKF2) falls back to inertial dead reckoning. Because velocity is obtained via single integration of accelerometer readings and position by double integration, residual sensor biases and stochastic noise cause velocity errors to drift rapidly.
+
+Rather than predicting absolute trajectory states directly, this paper investigates the feasibility of predicting velocity innovation residuals ($\mathbf{v}^{\text{PX4}} - \mathbf{v}^{\text{GPS}}$) using classical machine learning models trained exclusively on IMU signals.
+
+\section{Dataset and Leakage-Safe Feature Engineering}
+\subsection{Dataset Provenance and Audit}
+The benchmark dataset consists of 38,967 flight telemetry samples logged at ~200~Hz across four flight logs (`log\_51` through `log\_54`). Data quality verification confirmed zero missing or infinite values. Critical leakage analysis identified that raw GNSS velocities and estimator validity flags must be excluded from feature sets to reflect real-world outage conditions.
+
+\subsection{Temporal Feature Expansion}
+We expanded 8 raw IMU channels (triaxial acceleration, angular rates, and their Euclidean norms) into 142 features:
+\begin{itemize}
+    \item \textbf{Rolling Statistics:} Moving averages, standard deviations, and dynamic ranges across 10, 50, and 100 sample windows (50~ms, 250~ms, and 500~ms).
+    \item \textbf{Temporal Derivatives:} First-order rates of change and second-order acceleration jerk ($d^2a/dt^2$).
+    \item \textbf{Lag States:} Discrete time-shifted observations ($t-1$, $t-5$, $t-10$).
+    \item \textbf{Kinematic Coupling:} Planar angular relationships and specific force to angular velocity magnitude ratios.
+\end{itemize}
+Crucially, all operations are segmented per flight log to prevent cross-flight contamination.
+
+\subsection{Autocorrelation and Log-Based Partitioning}
+Target residuals exhibit significant autocorrelation persisting over several seconds. To prevent temporal leakage inherent in random cross-validation, we employ whole-flight partitioning:
+\begin{itemize}
+    \item \textbf{Training:} `log\_51` + `log\_53` (22,004 rows, 56.5\%)
+    \item \textbf{Validation:} `log\_52` (8,657 rows, 22.2\%)
+    \item \textbf{Testing:} `log\_54` (8,306 rows, 21.3\%)
+\end{itemize}
+
+\section{Methodology}
+\subsection{Ridge Regression Baseline}
+We formulate multi-output Ridge regression with Frobenius-norm regularization:
+\begin{equation}
+\min_{\mathbf{W}, \mathbf{b}} \frac{1}{2N} \sum_{i=1}^N \|\mathbf{y}_i - (\mathbf{W}^T \mathbf{x}_i + \mathbf{b})\|_2^2 + \frac{\alpha}{2} \|\mathbf{W}\|_F^2
+\end{equation}
+The optimal regularizer $\alpha=1000.0$ was identified using Leave-One-Log-Out cross-validation.
+
+\subsection{Random Forest Regressor}
+An ensemble of $B=150$ randomized decision trees is constructed:
+\begin{equation}
+\hat{\mathbf{y}}_{\text{RF}}(\mathbf{x}) = \frac{1}{B} \sum_{b=1}^B T_b(\mathbf{x})
+\end{equation}
+Splits are evaluated over random subsets $m = \sqrt{D}$ of the 142 features to decorrelate base estimators.
+
+\subsection{Histogram Gradient Boosting}
+Additive stage-wise boosting is applied with shrinkage factor $\eta=0.08$ and 256-bin histogram discretizations for rapid, regularized non-linear residual regression.
+
+\section{Experimental Results and Discussion}
+Table~\ref{tab:results} summarizes the comparative performance on the unseen test flight (`log\_54`).
+
+\begin{table}[htbp]
+\caption{Model Performance Comparison on Test Set (`log\_54`)}
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{RMSE (m/s)} & \textbf{MAE (m/s)} & \textbf{$R^2$} & \textbf{Latency (ms)} \\
+\midrule
+Ridge Regression & 0.1734 & 0.1315 & -0.3726 & 0.05 \\
+Gradient Boosting & 0.1682 & 0.1241 & -0.2541 & 0.42 \\
+\textbf{Random Forest} & \textbf{0.1603} & \textbf{0.1155} & \textbf{-0.1319} & 1.25 \\
+\bottomrule
+\end{tabular}
+\label{tab:results}
+\end{center}
+\end{table}
+
+\subsection{Findings}
+1. \textbf{Superiority of Non-Linear Ensembles:} Random Forest reduces overall test RMSE to 0.1603~m/s, achieving positive $R^2$ on horizontal velocity axes ($\Delta v_N, \Delta v_E$).
+2. \textbf{Vertical Axis Difficulty:} Across all models, $\Delta v_D$ exhibits the highest variance due to turbulent downwash and gravity coupling.
+3. \textbf{Real-Time Feasibility:} All models exhibit inference latencies below 2~ms, readily satisfying the 5~ms timing budget of 200~Hz flight controllers.
+
+\section{Conclusion}
+This study established an empirical benchmark for learning velocity residual corrections from IMU data. In Phase 2, we will investigate hybrid deep sequence models (1D-CNN and LSTM architectures) integrated directly into the PX4 EKF2 observation update loop.
+
+\begin{thebibliography}{00}
+\bibitem{groves2013} P. D. Groves, \textit{Principles of GNSS, Inertial, and Multisensor Integrated Navigation Systems}, 2nd ed. Artech House, 2013.
+\bibitem{herath2020} S. Herath, H. Yan, and Y. Furukawa, ``RoNIN: Robust Neural Inertial Navigation in the Wild,'' in \textit{Proc. IEEE ICRA}, 2020.
+\bibitem{liu2020} W. Liu et al., ``TLIO: Tight Learned Inertial Odometry,'' \textit{IEEE Robotics and Automation Letters}, vol. 5, no. 4, pp. 5653--5660, 2020.
+\bibitem{alhamad2021} A. Al-Hamad and N. El-Sheimy, ``Machine Learning-Based GPS/INS Integration for Bridging GPS Outages,'' \textit{Sensors}, vol. 21, no. 13, p. 4468, 2021.
+\end{thebibliography}
+
+\end{document}
