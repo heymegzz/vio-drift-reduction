@@ -56,7 +56,7 @@ $$\Delta \mathcal{L}(s, j) = \text{MSE}(\mathcal{S}) - \left[ \frac{|\mathcal{S}
    $$\text{Var}(\hat{y}_{\text{RF}}) = \rho \sigma^2 + \frac{1 - \rho}{B}\sigma^2$$
    By randomly subsampling features at each split, $\rho$ is minimized, yielding far lower variance than a single complex decision tree without increasing bias.
 2. **Non-Linear Dynamics Modeling:** Captures high-order interactions between angular velocity spikes and linear acceleration components (e.g., centripetal accelerations during turns) without needing explicit parametric formulas.
-3. **Inherent Feature Importance:** Calculates mean decrease in node impurity (Gini importance) to identify which sensor axes and temporal windows dominate drift prediction.
+3. **Inherent Feature Importance:** Calculates mean decrease in node impurity (variance reduction for regression) to identify which sensor axes and temporal windows dominate residual prediction. Note: this is sometimes called "Gini importance" in classification settings, but for regression tasks the impurity criterion is MSE (variance reduction), not Gini.
 
 ---
 

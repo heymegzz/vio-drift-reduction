@@ -85,3 +85,32 @@ measurement noise.
 3. Are rows with lower GPS quality (`fix_type=3`) affecting target
    reliability?
 4. What is the time alignment between GPS and PX4 velocity samples?
+
+## GPS Feature Removal ≠ GPS Independence
+
+Removing GPS-derived columns (velocity, DOP, satellite count) from the
+ML model's **input features** does not remove GPS dependence from the
+**recorded PX4 estimator output**.  During the flight, the PX4 EKF2
+likely fused GPS into its velocity estimate.  The targets
+(`px4_v − gps_v`) were computed from that GPS-aided estimate.
+
+Consequently:
+
+- The ML model predicts the residual between a **GPS-aided** estimator
+  and the GPS reference, not the residual of a pure IMU integration.
+- Claiming that this system validates "GNSS-denied drift reduction" is
+  **not supported** by the available data.  The correct description is
+  *PX4–GPS velocity residual prediction using IMU-derived features*.
+- To validate genuine GNSS-denied performance, one would need either:
+  1. PX4 logs recorded with GPS fusion explicitly disabled; or
+  2. A simulated GPS outage using dead-reckoning segments where
+     `dead_reckoning = 1`, which does not occur in this dataset.
+
+## Phase 1 Correction Results
+
+In Phase 1, the velocity correction `v_corrected = px4_v − predicted_delta_v`
+was evaluated on the test flight (log_54).  Whether the correction improves or
+worsens the velocity estimate compared to zero correction (leaving PX4
+uncorrected) is reported in `results/models/correction_evaluation.csv` and
+`results/models/model_comparison_report.md`.  No model is guaranteed to beat
+zero correction on this test flight.

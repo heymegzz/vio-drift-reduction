@@ -11,7 +11,7 @@
 - **Context:** Autonomous UAV navigation relies on IMU measurements (accelerometer + gyroscope) fused by PX4's EKF2.
 - **The Challenge:** In GNSS-denied or degraded environments (tunnels, urban canyons, RF jamming), unaided dead reckoning drifts rapidly due to double integration of bias and noise.
 - **Objective:** Predict velocity residuals ($\mathbf{v}^{\text{PX4}} - \mathbf{v}^{\text{GPS}}$) using *only* IMU-derived features to synthesize corrective pseudo-measurements for EKF2 during GNSS blackouts.
-- **Key Insight:** Treat drift reduction as a residual learning problem without violating GNSS-denied realism.
+- **Key Insight:** Treat residual prediction as a regression problem using IMU features. Note: this is PX4–GPS velocity residual prediction; validated GNSS-denied drift reduction requires additional evidence (see target_definition.md).
 
 ---
 
@@ -61,14 +61,18 @@
 ## Slide 6: Benchmark Results & Cross-Model Comparison
 *(See results/models/metrics_table.csv for full values)*
 
-| Model | Test RMSE Mean (m/s) | Test MAE Mean (m/s) | Test $R^2$ Mean | Horizontal $\Delta v_{N,E}$ RMSE |
+| Model | Test RMSE Mean (m/s) | Test MAE Mean (m/s) | Test R² Mean | Bias (m/s) |
 |---|---|---|---|---|
-| **Ridge Regression** | 0.1734 | 0.1315 | -0.3726 | ~0.115 m/s |
-| **Random Forest** | **0.1603** | **0.1155** | **-0.1319** | **~0.101 m/s** |
-| **Gradient Boosting** | *See benchmark* | *See benchmark* | *See benchmark* | *See benchmark* |
+| **Zero Correction** | **0.1472** | **0.1065** | **-0.013** | 0.017 |
+| Random Forest | 0.1626 | 0.1189 | -0.171 | 0.058 |
+| Gradient Boosting | 0.1684 | 0.1252 | -0.255 | 0.064 |
+| Mean Predictor | 0.1699 | 0.1268 | -0.239 | 0.069 |
+| Ridge Regression | 0.1746 | 0.1319 | -0.387 | 0.070 |
 
-- **Key Takeaway:** Tree-based non-linear models achieve positive $R^2$ and notable variance reduction on horizontal axes ($\Delta v_N, \Delta v_E$).
-- Vertical drift ($\Delta v_D$) remains the hardest to predict due to aerodynamic downwash and gravity coupling.
+- **Key Finding:** No ML model achieves lower RMSE than zero correction on this test flight. Applying any trained correction **worsens** the velocity estimate.
+- All R² values are negative, meaning every model performs worse than predicting the target mean.
+- This is a negative result, reported honestly as a reproducible benchmark.
+- Vertical drift (Δv_D) remains the hardest to predict due to aerodynamic downwash and gravity coupling.
 
 ---
 
@@ -77,13 +81,17 @@
 ### Q1: Why did you predict velocity residuals instead of absolute position or velocity?
 **Answer:** Predicting absolute velocity or position in an open-loop manner inevitably accumulates integration drift. By predicting the *residual error* of the existing PX4 EKF2 filter, our model acts as a closed-loop correction term, preserving the robust high-frequency physical integration of the Kalman filter while learning its systematic biases.
 
-### Q2: Why is the $R^2$ value for Ridge negative, and what does it mean?
-**Answer:** A negative $R^2$ on an unseen test log means the linear model performs worse than a simple horizontal line predicting the training mean. This occurs because the drift residuals are driven by non-linear maneuvers (centrifugal forces, attitude tilts) that linear planes cannot fit across different flight profiles. As seen in our results, non-linear tree models immediately recover positive $R^2$ on horizontal axes.
+### Q2: Why is the R² value negative for all models?
+**Answer:** A negative R² on an unseen test log means the model performs worse than a simple constant prediction equal to the target mean. This occurs because the drift residuals are small, noisy, and weakly correlated with the available IMU features on this flight. The residuals are driven by non-linear dynamics and GPS–PX4 synchronization effects that the current feature set does not capture well. This is an honest negative result that motivates Phase 2 investigations (additional sensors, richer features, or alternative target formulations).
+
+### Q2b: Why does zero correction beat all ML models?
+**Answer:** Zero correction (predicting residual = 0) has RMSE equal to the RMS of the actual targets. When the targets are small and noisy, any model that introduces prediction error adds noise rather than reducing it. The ML models' prediction errors exceed the targets' inherent magnitude, making "do nothing" the safer strategy on this particular test flight.
 
 ### Q3: How did you ensure there is no data leakage?
-**Answer:** We implemented a two-tier leakage prevention protocol:
+**Answer:** We implemented a multi-tier leakage prevention protocol:
 1. *Feature isolation:* Quarantined all GPS columns, velocity truths, and estimator status flags.
-2. *Temporal isolation:* All rolling windows and lag operations are computed per log. Entire flights are separated into train, validation, and test sets.
+2. *Temporal isolation:* All rolling windows, lags, and differences are computed per continuous segment (gap threshold 50 ms). Entire flights are separated into train, validation, and test sets.
+3. *Causal features:* Lag startup rows use forward-fill (past values only), not back-fill.
 
 ### Q4: How would this run in real time on an actual drone?
 **Answer:** Feature computation requires a sliding buffer of 100 IMU samples (0.5 seconds at 200 Hz). The Random Forest model inference latency is under 1.5 ms per sample, which easily fits within the 5 ms budget of a 200 Hz onboard companion computer (e.g., Raspberry Pi 4 or NVIDIA Jetson).

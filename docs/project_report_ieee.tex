@@ -35,7 +35,7 @@ narayanishreya7@gmail.com}
 \maketitle
 
 \begin{abstract}
-Autonomous navigation for Unmanned Aerial Vehicles (UAVs) relies heavily on Inertial Measurement Units (IMUs) integrated within an Extended Kalman Filter (EKF) state estimation architecture. However, in GNSS-denied environments, open-loop dead reckoning accumulates unbounded velocity and position errors due to sensor bias and unmodeled non-linear dynamics. In this work, we formulate IMU drift reduction as a residual learning problem, predicting the velocity discrepancy between the PX4 EKF2 state estimator and reference GNSS velocities ($\Delta v_N, \Delta v_E, \Delta v_D$) strictly using IMU-derived inputs. We construct a leakage-safe temporal feature engineering pipeline that transforms 8 raw sensor channels into 142 multi-scale features and evaluate three machine learning paradigms: Multi-Output Ridge Regression, Random Forest Ensembles, and Histogram Gradient Boosting. Using whole-flight log separation to eliminate temporal autocorrelation leakage, our experiments show that Random Forest achieves the lowest overall RMSE of 0.1603 m/s, demonstrating the necessity of non-linear model architectures for multi-axis inertial drift mitigation.
+Autonomous navigation for Unmanned Aerial Vehicles (UAVs) relies heavily on Inertial Measurement Units (IMUs) integrated within an Extended Kalman Filter (EKF) state estimation architecture. However, in GNSS-denied environments, open-loop dead reckoning accumulates unbounded velocity and position errors due to sensor bias and unmodeled non-linear dynamics. In this work, we formulate PX4--GPS velocity residual prediction as a regression problem, predicting the velocity discrepancy between the PX4 EKF2 state estimator and reference GNSS velocities ($\Delta v_N, \Delta v_E, \Delta v_D$) strictly using IMU-derived inputs. We construct a leakage-safe temporal feature engineering pipeline with gap-aware segmentation that transforms 8 raw sensor channels into 142 multi-scale features and evaluate three machine learning paradigms alongside zero-correction and mean-predictor baselines: Multi-Output Ridge Regression, Random Forest Ensembles, and Histogram Gradient Boosting. Using whole-flight log separation to eliminate temporal autocorrelation leakage, our experiments show that no ML model achieves lower test RMSE than zero correction (0.1472~m/s), with Random Forest closest at 0.1626~m/s. We report this as a negative result: on this test flight, applying any trained correction worsens the velocity estimate compared to leaving the PX4 output uncorrected. We note that the PX4 estimator likely incorporated GPS aiding during recording; validated GNSS-denied drift reduction would require recordings with GPS fusion explicitly disabled.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -93,13 +93,15 @@ Table~\ref{tab:results} summarizes the comparative performance on the unseen tes
 \begin{table}[htbp]
 \caption{Model Performance Comparison on Test Set (`log\_54`)}
 \begin{center}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-\textbf{Model} & \textbf{RMSE (m/s)} & \textbf{MAE (m/s)} & \textbf{$R^2$} & \textbf{Latency (ms)} \\
+\textbf{Model} & \textbf{RMSE (m/s)} & \textbf{MAE (m/s)} & \textbf{$R^2$} & \textbf{Bias (m/s)} \\
 \midrule
-Ridge Regression & 0.1734 & 0.1315 & -0.3726 & 0.05 \\
-Gradient Boosting & 0.1682 & 0.1241 & -0.2541 & 0.42 \\
-\textbf{Random Forest} & \textbf{0.1603} & \textbf{0.1155} & \textbf{-0.1319} & 1.25 \\
+\textbf{Zero Correction} & \textbf{0.1472} & \textbf{0.1065} & \textbf{-0.013} & 0.017 \\
+Random Forest & 0.1626 & 0.1189 & -0.171 & 0.058 \\
+Gradient Boosting & 0.1684 & 0.1252 & -0.255 & 0.064 \\
+Mean Predictor & 0.1699 & 0.1268 & -0.239 & 0.069 \\
+Ridge Regression & 0.1746 & 0.1319 & -0.387 & 0.070 \\
 \bottomrule
 \end{tabular}
 \label{tab:results}
@@ -107,18 +109,21 @@ Gradient Boosting & 0.1682 & 0.1241 & -0.2541 & 0.42 \\
 \end{table}
 
 \subsection{Findings}
-1. \textbf{Superiority of Non-Linear Ensembles:} Random Forest reduces overall test RMSE to 0.1603~m/s, achieving positive $R^2$ on horizontal velocity axes ($\Delta v_N, \Delta v_E$).
+1. \textbf{Negative Result:} No ML model achieves lower test RMSE than zero correction (0.1472~m/s). Applying any trained correction \textit{worsens} the velocity estimate on this test flight.
 2. \textbf{Vertical Axis Difficulty:} Across all models, $\Delta v_D$ exhibits the highest variance due to turbulent downwash and gravity coupling.
 3. \textbf{Real-Time Feasibility:} All models exhibit inference latencies below 2~ms, readily satisfying the 5~ms timing budget of 200~Hz flight controllers.
+4. \textbf{GPS Dependence Caveat:} The PX4 estimator likely incorporated GPS aiding during recording. Removing GPS features from ML inputs does not remove GPS dependence from the recorded estimator output. This experiment validates PX4--GPS residual prediction, not GNSS-denied drift reduction.
 
 \section{Conclusion}
-This study established an empirical benchmark for learning velocity residual corrections from IMU data. In Phase 2, we will investigate hybrid deep sequence models (1D-CNN and LSTM architectures) integrated directly into the PX4 EKF2 observation update loop.
+This study established a reproducible benchmark for learning PX4--GPS velocity residual corrections from IMU features. The key finding is negative: on this test flight, zero correction outperforms all three ML models, indicating that the residuals are too small and noisy for the current feature set to predict usefully. In Phase~2, we recommend investigating richer feature sets (e.g., flight-mode context), recordings with GPS fusion explicitly disabled, and hybrid deep sequence models to determine whether the negative result generalises.
 
 \begin{thebibliography}{00}
 \bibitem{groves2013} P. D. Groves, \textit{Principles of GNSS, Inertial, and Multisensor Integrated Navigation Systems}, 2nd ed. Artech House, 2013.
 \bibitem{herath2020} S. Herath, H. Yan, and Y. Furukawa, ``RoNIN: Robust Neural Inertial Navigation in the Wild,'' in \textit{Proc. IEEE ICRA}, 2020.
 \bibitem{liu2020} W. Liu et al., ``TLIO: Tight Learned Inertial Odometry,'' \textit{IEEE Robotics and Automation Letters}, vol. 5, no. 4, pp. 5653--5660, 2020.
-\bibitem{alhamad2021} A. Al-Hamad and N. El-Sheimy, ``Machine Learning-Based GPS/INS Integration for Bridging GPS Outages,'' \textit{Sensors}, vol. 21, no. 13, p. 4468, 2021.
+% NOTE: The original \bibitem{alhamad2021} cited Sensors 21(13) 4468 which is
+% actually El-Safoury et al. on SO2 ship emissions (DOI: 10.3390/s21134468).
+% The reference has been removed as it could not be verified.
 \end{thebibliography}
 
 \end{document}

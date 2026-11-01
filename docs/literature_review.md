@@ -112,10 +112,10 @@ Traditional mitigation strategies employ model-based estimation filters—primar
 
 ### 4.2 Tree-Based Ensemble Models for GPS/INS Integration
 
-- **Citation:** Al-Hamad, A. and El-Sheimy, N. (2021). "Machine Learning-Based GPS/INS Integration for Bridging GPS Outages." *Sensors*, vol. 21, no. 13, p. 4468.
-- **Key Contribution:** Applied Random Forest and gradient boosting models to predict INS position and velocity errors during GPS outages.
-- **Relevance:** Directly analogous to this project's approach—same category of classical ML models for the same task.
-- **Key Findings:** Tree-based ensemble methods achieved competitive or superior performance to neural networks for error prediction during short GPS outages (< 60 seconds), with significantly faster training and inference times.
+- **Citation:** *[Removed — the previously cited Sensors 21(13), 4468 (El-Safoury et al., 2021) is an unrelated paper on SO₂ ship emissions monitoring. The intended reference to tree-based ML for GPS/INS integration could not be verified.]*
+- **Key Contribution (general literature):** Random Forest and gradient boosting models have been applied to predict INS position and velocity errors during GPS outages in several works, though a specific verified citation with matching DOI is not available for inclusion here.
+- **Relevance:** Tree-based ensemble methods are directly analogous to this project's approach—same category of classical ML models for residual prediction.
+- **Note:** The result that tree-based methods always outperform simpler baselines should not be assumed.  On this project's test data, zero-correction (doing nothing) may outperform the trained models.
 
 ---
 
@@ -164,13 +164,13 @@ This project occupies a distinctive position at the intersection of several esta
 | 9 | Noureldin et al. | 2011 | GPS/INS via Dynamic Neural Networks | Information Fusion | Time-delay NN |
 | 10 | Cioffi et al. | 2023 | Learned IO for Drone Racing | IEEE RA-L | Model-filter + learning |
 | 11 | Wagstaff et al. | 2020 | Data-Driven Zero-Velocity Detection | IEEE Sensors | LSTM + EKF |
-| 12 | Al-Hamad and El-Sheimy | 2021 | ML-Based GPS/INS Integration | Sensors | RF/GBM |
+| 12 | *(removed — incorrect citation)* | 2021 | Tree-based ML for GPS/INS | — | RF/GBM |
 
 ---
 
 ## References
 
-1. Al-Hamad, A. and El-Sheimy, N. (2021). "Machine Learning-Based GPS/INS Integration for Bridging GPS Outages." *Sensors*, 21(13), 4468.
+1. *(Removed — Sensors 21(13) 4468 is El-Safoury et al., "On-Board Monitoring of SO₂ Ship Emissions," unrelated to GPS/INS.)*
 2. Brossard, M., Barrau, A., and Bonnabel, S. (2020). "AI-IMU Dead-Reckoning." *IEEE Transactions on Intelligent Vehicles*, 5(4), 585–595.
 3. Chen, C., Lu, X., Markham, A., and Trigoni, N. (2018). "IONet: Learning to Cure the Curse of Drift in Inertial Odometry." In *Proceedings of AAAI*.
 4. Cioffi, G., Bauersfeld, L., Kaufmann, E., and Scaramuzza, D. (2023). "Learned Inertial Odometry for Autonomous Drone Racing." *IEEE RA-L*, 8(5), 2993–3000.
