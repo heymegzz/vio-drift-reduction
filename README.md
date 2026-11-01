@@ -60,7 +60,8 @@ requirements.txt
 .gitignore
 imu_drift_feature_dataset.csv
 notebooks/
-  01_dataset_eda.ipynb
+  01_dataset_eda.py            # Jupytext percent-format source
+  01_dataset_eda.ipynb         # Jupyter notebook (generated from .py)
 docs/
   data_dictionary.md
   target_definition.md
@@ -85,7 +86,14 @@ pip install -r requirements.txt
 # 3. Run the EDA notebook
 jupyter notebook notebooks/01_dataset_eda.ipynb
 # Execute all cells in order from a clean kernel.
+# Alternatively, run the Python source directly:
+#   cd notebooks && python 01_dataset_eda.py
 ```
+
+All saved figures and tables are checked into the `results/eda/` directory.
+For detailed findings, see [`docs/eda_report.md`](docs/eda_report.md).
+For column-level documentation, see [`docs/data_dictionary.md`](docs/data_dictionary.md).
+For target variable definitions, see [`docs/target_definition.md`](docs/target_definition.md).
 
 ## License
 
