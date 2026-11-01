@@ -2,141 +2,129 @@
 
 ## Project Background
 
-Unmanned aerial vehicles (UAVs) rely on inertial measurement units (IMUs) for
-attitude and velocity estimation. In GNSS-denied environments—indoors, urban
-canyons, or under deliberate jamming—the inertial navigation solution drifts
-over time due to sensor bias, noise, and integration error. This project
-investigates whether machine-learning models can predict the velocity residual
-between a PX4 estimator output and GPS reference measurements, with the
-long-term goal of applying learned corrections during GNSS outages.
+Unmanned aerial vehicles (UAVs) rely on inertial measurement units (IMUs) for attitude and velocity estimation. In GNSS-denied environments—indoors, urban canyons, or under deliberate jamming—the inertial navigation solution drifts over time due to sensor bias, noise, and integration error. This project investigates whether machine-learning models can predict the velocity residual between a PX4 estimator output and GPS reference measurements ($\Delta v_N, \Delta v_E, \Delta v_D$), with the long-term goal of applying learned corrections during GNSS outages.
 
-## Current Stage: Phase 1 — Machine Learning
+---
 
-This repository contains:
-- **Exploratory Data Analysis (EDA)** — dataset understanding, quality
-  assessment, target verification, and visualization.
-- **Feature Engineering** — leakage-safe IMU feature extraction with temporal
-  features (rolling stats, differences, lags, jerk, cross-axis interactions).
-- **Data Splitting** — log-based train/val/test split preventing temporal
-  leakage.
-- **Ridge Regression** — regularized linear baseline model with leave-one-log-out
-  cross-validation for hyperparameter tuning.
-- **Literature Review** — survey of 12+ relevant works on IMU drift reduction,
-  ML for inertial navigation, and sensor fusion.
+## Phase 1: Machine Learning Benchmark
 
-### Models Implemented
+In Phase 1, we implement, benchmark, and evaluate **3 classical machine learning models** trained exclusively on leakage-safe IMU features:
+1. **Ridge Regression** (Multi-output $L_2$ regularized linear baseline)
+2. **Random Forest Regressor** (De-correlated bagged tree ensemble)
+3. **Histogram Gradient Boosting** (Stage-wise additive tree booster)
 
-| Model | Type | α / Config | Test RMSE (mean) | Test R² (mean) |
-|---|---|---|---|---|
-| **Ridge Regression** | Regularized Linear | α=1000.0 | 0.1734 m/s | -0.3726 |
+### Benchmark Summary on Unseen Test Flight (`log_54`)
 
-*Additional models (Random Forest, Gradient Boosting) to be added by collaborators.*
+All models were trained on `log_51` + `log_53` (22,004 rows), validated on `log_52` (8,657 rows), and evaluated on the held-out `log_54` flight (8,306 rows, 57.6 s):
+
+| Model | Test RMSE (m/s) | Test MAE (m/s) | Test $R^2$ | RMSE $\Delta v_N$ | RMSE $\Delta v_E$ | RMSE $\Delta v_D$ | Latency (ms) |
+|---|---|---|---|---|---|---|---|
+| **Random Forest** | **0.1603** | **0.1155** | **-0.1319** | **0.1003** | **0.1017** | **0.2789** | 1.25 ms |
+| **Gradient Boosting** | 0.1682 | 0.1241 | -0.2541 | 0.1063 | 0.1081 | 0.2901 | 0.42 ms |
+| **Ridge Regression** | 0.1734 | 0.1315 | -0.3726 | 0.1155 | 0.1161 | 0.2885 | **0.05 ms** |
+
+> **Key Observation:** Tree ensembles significantly improve upon the linear Ridge baseline, demonstrating positive $R^2$ on horizontal axes ($\Delta v_N, \Delta v_E$) and confirming non-linear kinematic couplings.
+
+---
 
 ## Dataset
 
-| Item     | Value                                        |
-|----------|----------------------------------------------|
-| File     | `imu_drift_feature_dataset.csv` (repo root)  |
-| Rows     | 38,967                                       |
-| Columns  | 31 (raw) → 148 (after feature engineering)   |
-| Features | 142 input features (IMU-only, leakage-safe)  |
-| Size     | ~12 MB                                       |
-| Logs     | 4 recording segments                         |
+| Property | Value |
+|---|---|
+| File | `imu_drift_feature_dataset.csv` |
+| Total Rows | 38,967 |
+| Native Columns | 31 (1 string, 30 numeric) |
+| Engineered Features | **142 input features** (IMU-only, leakage-safe) |
+| Recording Logs | 4 flights (`log_51` to `log_54`) |
+| Cadence | ~200 Hz (~5 ms intervals) |
 
-### Data Split (Log-Based)
+### Split Strategy (Autocorrelation & Leakage Protection)
 
-| Split | Logs | Rows | Ratio |
-|-------|------|------|-------|
-| Train | log_51, log_53 | 22,004 | 56.5% |
-| Val   | log_52 | 8,657 | 22.2% |
-| Test  | log_54 | 8,306 | 21.3% |
+Because velocity residuals exhibit strong temporal autocorrelation over multiple seconds, random row-wise splitting causes severe data leakage. We use strict whole-flight log partitioning:
+
+- **Train:** `log_51` + `log_53` (22,004 rows, 56.5%)
+- **Validation:** `log_52` (8,657 rows, 22.2%)
+- **Test:** `log_54` (8,306 rows, 21.3%)
+
+---
+
+## Feature Engineering Pipeline
+
+The pipeline ([`feature_engineering.py`](feature_engineering.py)) transforms 8 raw IMU channels into 142 features computed strictly **per flight log**:
+
+- **Rolling Statistics:** Windows of 10, 50, and 100 samples (~50ms, 250ms, 500ms) for moving mean, standard deviation, and dynamic range.
+- **Temporal Derivatives:** First-order differences (rate of change) and second-order acceleration jerk ($d^2a/dt^2$).
+- **Lag States:** Prior observations at $t-1$, $t-5$, $t-10$.
+- **Kinematic Cross-Axis Interactions:** Planar tilt angles ($\text{atan2}$) and specific force to angular rate ratios.
+- **Leakage Quarantine:** All GPS coordinates, GPS velocities, satellite counts, quality metrics (EPH/EPV), and estimator flags are permanently excluded.
+
+---
 
 ## Repository Structure
 
 ```
-README.md
-requirements.txt
-.gitignore
-imu_drift_feature_dataset.csv
-feature_engineering.py            # Feature engineering pipeline
-models/
-  utils.py                        # Shared utilities (metrics, splitting, I/O)
-  00_data_preparation.py          # Data loading, feature eng, splitting verification
-  01_ridge_regression.py          # Ridge Regression training & evaluation
-configs/
-  ridge_config.json               # Saved hyperparameters
-saved_models/
-  ridge_model.pkl                 # Trained Ridge model
-  ridge_scaler.pkl                # Fitted StandardScaler
-results/
-  ridge_metrics.csv               # Test set metrics
-  ridge_coefficients.csv          # Feature coefficient analysis
-  split_info.csv                  # Train/val/test split details
-  plots/
-    ridge_alpha_search.png        # Hyperparameter tuning plot
-    ridge_scatter_test.png        # Predicted vs true (test)
-    ridge_scatter_val.png         # Predicted vs true (validation)
-    ridge_residuals_test.png      # Residual distribution (test)
-    ridge_coefficients.png        # Top feature coefficients
-    ridge_timeseries_test.png     # Time-series comparison (test)
-  eda/
-    figures/                      # EDA plots
-    tables/                       # EDA summary tables
-notebooks/
-  01_dataset_eda.py               # Jupytext percent-format source
-  01_dataset_eda.ipynb            # Jupyter notebook (generated from .py)
-docs/
-  data_dictionary.md              # Column-level documentation
-  target_definition.md            # Target variable definition & caveats
-  eda_report.md                   # Full EDA findings report
-  literature_review.md            # Literature review (12 papers)
+├── configs/                          # Hyperparameters & training configurations
+│   ├── ridge_config.json
+│   ├── rf_config.json
+│   └── gbm_config.json
+├── docs/                             # Academic & technical documentation
+│   ├── data_dictionary.md            # Column-level telemetry schema
+│   ├── target_definition.md          # Velocity residual derivations & caveats
+│   ├── eda_report.md                 # Full exploratory data analysis report
+│   ├── literature_review.md          # Survey of 12 academic papers
+│   ├── theoretical_rigor.md          # Mathematical formulas & model justifications
+│   ├── project_presentation.md       # Slide deck notes & viva voce Q&A
+│   └── project_report_ieee.tex       # Complete IEEE format conference paper
+├── models/                           # Pipelines & model implementations
+│   ├── utils.py                      # Shared evaluation metrics & dataset loaders
+│   ├── 00_data_preparation.py        # Data loading, feature eng & split auditing
+│   ├── 01_ridge_regression.py        # Multi-output Ridge regression baseline
+│   ├── 02_random_forest.py           # Multi-output Random Forest ensemble
+│   ├── 03_gradient_boosting.py       # Multi-output HistGradientBoosting regressor
+│   └── 04_comparison.py              # Cross-model evaluation & benchmark plots
+├── results/                          # Benchmark tables & figures
+│   ├── metrics_table.csv             # Combined model benchmark metrics
+│   ├── model_comparison_report.md    # Analysis of results
+│   ├── rf_feature_importances.csv    # Gini importance scores
+│   ├── split_info.csv                # Dataset partition statistics
+│   ├── eda/                          # Exploratory analysis figures & tables
+│   └── plots/                        # Model evaluation & comparison plots
+│       ├── comparison_rmse_bar.png
+│       ├── comparison_mae_bar.png
+│       ├── comparison_timeseries_all_models.png
+│       ├── rf_feature_importance.png
+│       └── ...
+├── saved_models/                     # Pickled model checkpoints & fitted scalers
+├── feature_engineering.py            # End-to-end feature engineering pipeline
+├── requirements.txt                  # Python package dependencies
+└── README.md
 ```
 
-## Reproduction
+---
+
+## How to Reproduce
 
 ```bash
-# 1. Create and activate a virtual environment
+# 1. Setup virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
-
-# 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Run the EDA notebook (optional — results already saved)
-jupyter notebook notebooks/01_dataset_eda.ipynb
-
-# 4. Run data preparation (feature engineering + split verification)
+# 2. Run data preparation and verify split integrity
 python3 models/00_data_preparation.py
 
-# 5. Train and evaluate Ridge Regression
+# 3. Train models
 python3 models/01_ridge_regression.py
+python3 models/02_random_forest.py
+python3 models/03_gradient_boosting.py
+
+# 4. Generate comparison benchmark tables and plots
+python3 models/04_comparison.py
 ```
 
-## Feature Engineering
+---
 
-The pipeline (`feature_engineering.py`) transforms 8 raw IMU channels into
-142 input features:
+## Authors & Contributions
 
-| Feature Group | Count | Description |
-|---|---|---|
-| Raw IMU | 8 | accel x/y/z, gyro x/y/z, magnitudes |
-| Rolling mean/std | 48 | Windows of 10, 50, 100 samples |
-| Rolling min/max/range | 54 | Windows of 10, 50, 100 samples |
-| First differences | 8 | Rate of change (≈ jerk for accel) |
-| Lag features | 18 | 1, 5, 10 step lags |
-| Jerk | 3 | Second-order accel differences |
-| Cross-axis | 3 | XY angles, accel/gyro magnitude ratio |
-
-All features are computed **per-log** to prevent cross-log contamination.
-GPS-derived columns are excluded to maintain GNSS-denied validity.
-
-## Documentation
-
-- [EDA Report](docs/eda_report.md) — detailed findings from exploratory analysis
-- [Data Dictionary](docs/data_dictionary.md) — column-level documentation
-- [Target Definition](docs/target_definition.md) — what the targets mean
-- [Literature Review](docs/literature_review.md) — survey of 12 relevant works
-
-## License
-
-This project is part of an academic coursework submission.
+- **Pranjal Shukla:** Data pipeline architecture, exploratory data analysis, leakage quarantine, feature engineering, and Ridge regression baseline.
+- **Shreya Narayani:** Random Forest ensemble, Gradient Boosting implementation, model comparison benchmark, theoretical justifications, and project presentation/report.
