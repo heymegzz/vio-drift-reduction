@@ -5,8 +5,27 @@ Feature Engineering Pipeline for VIO Drift Reduction
 Transforms the raw IMU dataset into a model-ready feature matrix by:
   1. Removing GPS/PX4 leaky columns (GNSS-denied scenario)
   2. Removing constant-value columns (no discriminative information)
-  3. Engineering temporal features (rolling stats, differences, lags)
-  4. Preserving log-boundary integrity (no cross-log contamination)
+  3. Detecting temporal gaps and segmenting each log into continuous runs
+  4. Engineering temporal features (rolling stats, differences, lags, jerk)
+     with proper segment-boundary resets
+  5. Preserving log-boundary integrity (no cross-log contamination)
+
+Gap handling:
+  Timestamps are in microseconds (µs).  The nominal cadence is ~200 Hz
+  (median dt ≈ 5000 µs).  A GAP_THRESHOLD_US of 50 000 µs (50 ms, ~10×
+  the median interval) is used to split each log into continuous segments.
+  Rolling windows, lags, differences, and jerk are reset at segment
+  boundaries so that no feature crosses a temporal discontinuity.
+
+Window convention:
+  Rolling windows are specified in *samples* (not milliseconds).  At the
+  nominal 200 Hz cadence: window=10 ≈ 50 ms, window=50 ≈ 250 ms,
+  window=100 ≈ 500 ms.  Actual duration depends on the true sampling
+  interval within each segment.
+
+Jerk computation:
+  jerk = da/dt, computed as diff(accel) / diff(timestamp), using the
+  actual elapsed time between consecutive samples.
 
 Usage:
     python feature_engineering.py                      # uses defaults
@@ -40,8 +59,13 @@ RAW_IMU_CHANNELS = [
 
 MAGNITUDES = ["accel_magnitude_m_s2", "gyro_magnitude_rad_s"]
 
-ROLLING_WINDOWS = [10, 50, 100]          # ~50ms, 250ms, 500ms at 200 Hz
-LAG_STEPS = [1, 5, 10]                   # ~5ms, 25ms, 50ms
+ROLLING_WINDOWS = [10, 50, 100]          # samples (~50ms, 250ms, 500ms at 200 Hz)
+LAG_STEPS = [1, 5, 10]                   # samples (~5ms, 25ms, 50ms)
+
+# Gap detection: intervals > 50 ms are treated as temporal discontinuities.
+# Derived from training-data analysis: nominal dt ≈ 5 000 µs (200 Hz) with
+# occasional ~2.3 s gaps between GPS update bursts.  50 ms ≈ 10× median dt.
+GAP_THRESHOLD_US = 50_000  # microseconds
 
 # Columns that are constant across the entire dataset (identified in EDA)
 CONSTANT_COLUMNS = [
@@ -51,72 +75,109 @@ CONSTANT_COLUMNS = [
 
 
 # ──────────────────────────────────────────────────────────────────────
+# Segment assignment
+# ──────────────────────────────────────────────────────────────────────
+
+def assign_segments(group: pd.DataFrame,
+                    gap_threshold_us: float = GAP_THRESHOLD_US) -> pd.DataFrame:
+    """
+    Assign a segment ID to each row within a single log.
+
+    A new segment starts whenever the timestamp gap exceeds
+    gap_threshold_us.  The segment column is used downstream to
+    reset rolling windows, lags, and differences at boundaries.
+    """
+    dt = group["timestamp"].diff()
+    # First row of each log always starts segment 0
+    is_gap = (dt > gap_threshold_us).fillna(False)
+    group["_segment"] = is_gap.cumsum()
+    return group
+
+
+# ──────────────────────────────────────────────────────────────────────
 # Feature engineering functions
 # ──────────────────────────────────────────────────────────────────────
 
-def add_rolling_features(group: pd.DataFrame, columns: list,
+def add_rolling_features(segment: pd.DataFrame, columns: list,
                          windows: list) -> pd.DataFrame:
     """
     Add rolling mean and std for each column at each window size.
 
     Parameters
     ----------
-    group : DataFrame for a single log (sorted by time)
+    segment : DataFrame for a single continuous segment (sorted by time)
     columns : sensor columns to compute rolling stats for
-    windows : list of window sizes (in rows)
+    windows : list of window sizes (in samples)
 
     Notes
     -----
-    Uses min_periods=1 so early rows get partial-window stats rather
-    than NaN.  Rolling is computed per-log to avoid cross-log leakage.
+    Uses min_periods=1 so early rows within a segment get partial-window
+    stats rather than NaN.  Because this is called per-segment, no
+    rolling window crosses a temporal gap.
     """
     for col in columns:
         for w in windows:
-            group[f"{col}_rmean_{w}"] = (
-                group[col].rolling(window=w, min_periods=1).mean()
+            segment[f"{col}_rmean_{w}"] = (
+                segment[col].rolling(window=w, min_periods=1).mean()
             )
-            group[f"{col}_rstd_{w}"] = (
-                group[col].rolling(window=w, min_periods=1).std().fillna(0)
+            segment[f"{col}_rstd_{w}"] = (
+                segment[col].rolling(window=w, min_periods=1).std().fillna(0)
             )
-    return group
+    return segment
 
 
-def add_difference_features(group: pd.DataFrame,
+def add_difference_features(segment: pd.DataFrame,
                             columns: list) -> pd.DataFrame:
     """
     Add first-order differences (rate of change) for each column.
 
-    For accelerometer channels this approximates *jerk* (da/dt).
-    For gyroscope channels this approximates angular acceleration.
+    The first row of each segment receives 0 (no prior sample to
+    difference against within this continuous run).
     """
     for col in columns:
-        group[f"{col}_diff1"] = group[col].diff().fillna(0)
-    return group
+        segment[f"{col}_diff1"] = segment[col].diff().fillna(0)
+    return segment
 
 
-def add_lag_features(group: pd.DataFrame, columns: list,
+def add_lag_features(segment: pd.DataFrame, columns: list,
                      lags: list) -> pd.DataFrame:
     """
     Add lagged values of each column.
 
-    Lags are computed per-log to prevent cross-log leakage.
+    Lags are computed per-segment so they never reach across temporal
+    gaps.  Startup rows where the lag is unavailable are forward-filled
+    (using the most recent available past value, which is causal), then
+    any remaining leading NaN (no past exists) are filled with the
+    current value (equivalent to lag=0 at the segment start).
     """
     for col in columns:
         for lag in lags:
-            group[f"{col}_lag{lag}"] = group[col].shift(lag).bfill()
-    return group
+            lagged = segment[col].shift(lag)
+            # ffill is causal: propagate last known past value forward
+            lagged = lagged.ffill()
+            # For the very first rows where no past exists, use current value
+            lagged = lagged.fillna(segment[col])
+            segment[f"{col}_lag{lag}"] = lagged
+    return segment
 
 
-def add_jerk_features(group: pd.DataFrame) -> pd.DataFrame:
+def add_jerk_features(segment: pd.DataFrame) -> pd.DataFrame:
     """
-    Add jerk (second-order differences of acceleration).
+    Add jerk = da/dt for each accelerometer axis.
 
-    jerk = d²a/dt²  ≈  diff(diff(accel))
+    Uses actual elapsed time (dt in seconds) between consecutive
+    timestamps, so the result has physical units of m/s³.  The first
+    row of each segment receives 0 (no prior sample).
     """
     accel_cols = ["accel_x_m_s2", "accel_y_m_s2", "accel_z_m_s2"]
+    # Elapsed time in seconds between consecutive rows
+    dt_s = segment["timestamp"].diff() / 1e6  # µs → s
+    # Avoid division by zero for the first row
+    dt_s = dt_s.replace(0, np.nan)
     for col in accel_cols:
-        group[f"{col}_jerk"] = group[col].diff().diff().fillna(0)
-    return group
+        da = segment[col].diff()
+        segment[f"{col}_jerk"] = (da / dt_s).fillna(0)
+    return segment
 
 
 def add_cross_axis_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -140,17 +201,17 @@ def add_cross_axis_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def add_rolling_range_features(group: pd.DataFrame, columns: list,
+def add_rolling_range_features(segment: pd.DataFrame, columns: list,
                                 windows: list) -> pd.DataFrame:
     """Add rolling min, max, and range (max-min) features."""
     for col in columns:
         for w in windows:
-            rmin = group[col].rolling(window=w, min_periods=1).min()
-            rmax = group[col].rolling(window=w, min_periods=1).max()
-            group[f"{col}_rmin_{w}"] = rmin
-            group[f"{col}_rmax_{w}"] = rmax
-            group[f"{col}_rrange_{w}"] = rmax - rmin
-    return group
+            rmin = segment[col].rolling(window=w, min_periods=1).min()
+            rmax = segment[col].rolling(window=w, min_periods=1).max()
+            segment[f"{col}_rmin_{w}"] = rmin
+            segment[f"{col}_rmax_{w}"] = rmax
+            segment[f"{col}_rrange_{w}"] = rmax - rmin
+    return segment
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -185,39 +246,59 @@ def engineer_features(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     if verbose:
         print(f"  Dropped {len(cols_to_drop)} leaky/constant columns")
 
-    # 3. Per-log temporal features (to prevent cross-log leakage)
-    sensor_cols = RAW_IMU_CHANNELS + MAGNITUDES
-
-    # Apply all per-log transforms in a single groupby pass to avoid
-    # repeated groupby overhead and column-drop issues.
-    def _per_log_transforms(group):
-        group = add_rolling_features(group, sensor_cols, ROLLING_WINDOWS)
-        group = add_rolling_range_features(group, RAW_IMU_CHANNELS,
-                                           ROLLING_WINDOWS)
-        group = add_difference_features(group, sensor_cols)
-        group = add_lag_features(group, RAW_IMU_CHANNELS, LAG_STEPS)
-        group = add_jerk_features(group)
-        return group
+    # 3. Assign segments within each log (gap detection)
+    #    Compute directly to avoid groupby column-dropping issues
+    segment_ids = []
+    for _, grp in df.groupby("log_id", sort=False):
+        dt = grp["timestamp"].diff()
+        is_gap = (dt > GAP_THRESHOLD_US).fillna(False)
+        segment_ids.append(is_gap.cumsum())
+    df["_segment"] = pd.concat(segment_ids)
 
     if verbose:
-        print("  Computing per-log temporal features "
+        n_segments = df.groupby("log_id")["_segment"].nunique().sum()
+        print(f"  Detected {n_segments} continuous segments "
+              f"across {df['log_id'].nunique()} logs "
+              f"(gap threshold = {GAP_THRESHOLD_US/1000:.0f} ms)")
+
+    # 4. Per-segment temporal features (to prevent cross-gap leakage)
+    sensor_cols = RAW_IMU_CHANNELS + MAGNITUDES
+
+    def _per_segment_transforms(segment):
+        segment = add_rolling_features(segment, sensor_cols, ROLLING_WINDOWS)
+        segment = add_rolling_range_features(segment, RAW_IMU_CHANNELS,
+                                             ROLLING_WINDOWS)
+        segment = add_difference_features(segment, sensor_cols)
+        segment = add_lag_features(segment, RAW_IMU_CHANNELS, LAG_STEPS)
+        segment = add_jerk_features(segment)
+        return segment
+
+    if verbose:
+        print("  Computing per-segment temporal features "
               "(rolling, range, diff, lag, jerk)...")
-    # Save log_id before groupby since include_groups=False drops it
+
+    # Group by both log_id and _segment so features don't cross gaps
+    # Save grouping columns before apply drops them
     log_id_series = df["log_id"].copy()
-    df = df.groupby("log_id", group_keys=False).apply(
-        _per_log_transforms, include_groups=False
+    segment_series = df["_segment"].copy()
+    df = df.groupby(["log_id", "_segment"], group_keys=False).apply(
+        _per_segment_transforms, include_groups=False
     )
-    # Restore log_id column
+    # Restore grouping columns
     df.insert(0, "log_id", log_id_series)
+
+    # _segment is metadata — do not pass to models
+    # (it was already consumed by the groupby above)
+
     # Defragment the dataframe after many column insertions
     df = df.copy()
 
-    # 4. Cross-axis features (row-wise, no temporal leakage risk)
+    # 5. Cross-axis features (row-wise, no temporal leakage risk)
     if verbose:
         print("  Computing cross-axis features...")
     df = add_cross_axis_features(df)
 
-    # 5. Final checks
+    # 6. Final checks
     n_new = len(df.columns)
     n_engineered = n_new - (n_original - len(cols_to_drop))
     assert df.isna().sum().sum() == 0, "NaN values found after engineering!"
@@ -280,7 +361,7 @@ def main():
         elif "_lag" in c:
             groups.setdefault("Lag features", []).append(c)
         elif "_jerk" in c:
-            groups.setdefault("Jerk", []).append(c)
+            groups.setdefault("Jerk (da/dt)", []).append(c)
         elif c in IMU_FEATURES:
             groups.setdefault("Raw IMU", []).append(c)
         else:
