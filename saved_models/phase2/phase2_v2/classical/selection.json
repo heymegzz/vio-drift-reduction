@@ -1,0 +1,834 @@
+{
+  "ridge": {
+    "best": {
+      "family": "ridge",
+      "params": {
+        "alpha": 1000000
+      },
+      "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+      "training_seconds": 0.008095708035398275,
+      "validation": {
+        "mae_N": 0.06964661156452183,
+        "rmse_N": 0.09499847613519984,
+        "r2_N": -0.018165224499246957,
+        "bias_N": 0.01083492351026609,
+        "mae_E": 0.05223787054082057,
+        "rmse_E": 0.06916089719391584,
+        "r2_E": -0.004659600341701209,
+        "bias_E": -0.0031803465093865296,
+        "mae_D": 0.23973515574928436,
+        "rmse_D": 0.27926484591081,
+        "r2_D": -1.3732778697139034,
+        "bias_D": 0.21465238376154294,
+        "mae_mean": 0.12053987928487558,
+        "rmse_mean": 0.14780807307997523,
+        "r2_mean": -0.4653675648516172,
+        "bias_mean": 0.07410232025414083
+      },
+      "path": "saved_models/phase2/phase2_v2/classical/ridge/5/model.joblib",
+      "trial": 5
+    },
+    "trials": [
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 10
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.2911735000088811,
+        "validation": {
+          "mae_N": 0.075933961359139,
+          "rmse_N": 0.1018783133333521,
+          "r2_N": -0.17097729559261943,
+          "bias_N": -0.009578725210591856,
+          "mae_E": 0.06048200735709112,
+          "rmse_E": 0.07966943431481464,
+          "r2_E": -0.3331566046001524,
+          "bias_E": 0.007754632763175485,
+          "mae_D": 0.2692212365906206,
+          "rmse_D": 0.30808522715636716,
+          "r2_D": -1.8884030726052035,
+          "bias_D": 0.24808765911219327,
+          "mae_mean": 0.13521240176895025,
+          "rmse_mean": 0.16321099160151128,
+          "r2_mean": -0.7975123242659917,
+          "bias_mean": 0.08208785555492563
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/0/model.joblib",
+        "trial": 0
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 100
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.018349249963648617,
+        "validation": {
+          "mae_N": 0.07506861794031452,
+          "rmse_N": 0.10120072833368494,
+          "r2_N": -0.155452929693213,
+          "bias_N": -0.008967938697857654,
+          "mae_E": 0.06002406378309675,
+          "rmse_E": 0.07907042036823823,
+          "r2_E": -0.31318464798692336,
+          "bias_E": 0.007630063414102806,
+          "mae_D": 0.26822433516950395,
+          "rmse_D": 0.30651641886919984,
+          "r2_D": -1.8590617528792337,
+          "bias_D": 0.24736677922016934,
+          "mae_mean": 0.13443900563097175,
+          "rmse_mean": 0.16226252252370768,
+          "r2_mean": -0.7758997768531234,
+          "bias_mean": 0.0820096346454715
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/1/model.joblib",
+        "trial": 1
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 1000
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.018551999994087964,
+        "validation": {
+          "mae_N": 0.07267386094550067,
+          "rmse_N": 0.09932421793422413,
+          "r2_N": -0.11300032261147219,
+          "bias_N": -0.006899056928725053,
+          "mae_E": 0.05872997866097505,
+          "rmse_E": 0.07738247288292746,
+          "r2_E": -0.2577169386189109,
+          "bias_E": 0.00649891673811128,
+          "mae_D": 0.2622703078124795,
+          "rmse_D": 0.2993383973627464,
+          "r2_D": -1.7267222893374203,
+          "bias_D": 0.24251119462899318,
+          "mae_mean": 0.13122471580631842,
+          "rmse_mean": 0.158681696059966,
+          "r2_mean": -0.6991465168559344,
+          "bias_mean": 0.08070368481279314
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/2/model.joblib",
+        "trial": 2
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 10000
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.09887637500651181,
+        "validation": {
+          "mae_N": 0.06989823121386544,
+          "rmse_N": 0.09697537876385941,
+          "r2_N": -0.06098184114662053,
+          "bias_N": -0.0012354189271077526,
+          "mae_E": 0.05625868043653486,
+          "rmse_E": 0.07436072142368853,
+          "r2_E": -0.16140820681670665,
+          "bias_E": 0.0034548907772981984,
+          "mae_D": 0.25047289023174796,
+          "rmse_D": 0.2865507474219934,
+          "r2_D": -1.4987289074768784,
+          "bias_D": 0.23110714870620283,
+          "mae_mean": 0.1255432672940494,
+          "rmse_mean": 0.15262894920318046,
+          "r2_mean": -0.5737063184800685,
+          "bias_mean": 0.07777554018546443
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/3/model.joblib",
+        "trial": 3
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 100000
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.008201499993447214,
+        "validation": {
+          "mae_N": 0.06917527646190036,
+          "rmse_N": 0.09565108549912509,
+          "r2_N": -0.03220221783940991,
+          "bias_N": 0.00657138944046638,
+          "mae_E": 0.05310496803357624,
+          "rmse_E": 0.07061995685225034,
+          "r2_E": -0.04749654043427998,
+          "bias_E": -0.000399057362837626,
+          "mae_D": 0.24159263118579027,
+          "rmse_D": 0.27924768367477576,
+          "r2_D": -1.3729861788404123,
+          "bias_D": 0.22042736694568116,
+          "mae_mean": 0.12129095856042228,
+          "rmse_mean": 0.14850624200871707,
+          "r2_mean": -0.4842283123713674,
+          "bias_mean": 0.07553323300776997
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/4/model.joblib",
+        "trial": 4
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 1000000
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.008095708035398275,
+        "validation": {
+          "mae_N": 0.06964661156452183,
+          "rmse_N": 0.09499847613519984,
+          "r2_N": -0.018165224499246957,
+          "bias_N": 0.01083492351026609,
+          "mae_E": 0.05223787054082057,
+          "rmse_E": 0.06916089719391584,
+          "r2_E": -0.004659600341701209,
+          "bias_E": -0.0031803465093865296,
+          "mae_D": 0.23973515574928436,
+          "rmse_D": 0.27926484591081,
+          "r2_D": -1.3732778697139034,
+          "bias_D": 0.21465238376154294,
+          "mae_mean": 0.12053987928487558,
+          "rmse_mean": 0.14780807307997523,
+          "r2_mean": -0.4653675648516172,
+          "bias_mean": 0.07410232025414083
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/5/model.joblib",
+        "trial": 5
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 10000000
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.005428500007838011,
+        "validation": {
+          "mae_N": 0.06995082779714874,
+          "rmse_N": 0.09491875663181805,
+          "r2_N": -0.01645712195282356,
+          "bias_N": 0.011896840194592515,
+          "mae_E": 0.052277211059927324,
+          "rmse_E": 0.06910144298023321,
+          "r2_E": -0.00293303012715751,
+          "bias_E": -0.003961963386782636,
+          "mae_D": 0.24007422532727093,
+          "rmse_D": 0.2799370490234594,
+          "r2_D": -1.3847167944767187,
+          "bias_D": 0.21360286630894315,
+          "mae_mean": 0.12076742139478232,
+          "rmse_mean": 0.14798574954517021,
+          "r2_mean": -0.46803564885223325,
+          "bias_mean": 0.073845914372251
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/6/model.joblib",
+        "trial": 6
+      },
+      {
+        "family": "ridge",
+        "params": {
+          "alpha": 100000000
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 0.008535875007510185,
+        "validation": {
+          "mae_N": 0.07000696389928257,
+          "rmse_N": 0.09491618558548266,
+          "r2_N": -0.016402057536528458,
+          "bias_N": 0.012040024228368244,
+          "mae_E": 0.05230393365742996,
+          "rmse_E": 0.06911857817520077,
+          "r2_E": -0.0034304896018502173,
+          "bias_E": -0.004071805036126706,
+          "mae_D": 0.24017316027047106,
+          "rmse_D": 0.280064518402985,
+          "r2_D": -1.3868890512715693,
+          "bias_D": 0.2135125869379183,
+          "mae_mean": 0.12082801927572788,
+          "rmse_mean": 0.14803309405455614,
+          "r2_mean": -0.46890719946998266,
+          "bias_mean": 0.07382693537671994
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/ridge/7/model.joblib",
+        "trial": 7
+      }
+    ]
+  },
+  "rf": {
+    "best": {
+      "family": "rf",
+      "params": {
+        "n_estimators": 150,
+        "max_depth": 4,
+        "min_samples_leaf": 50,
+        "max_features": 0.5
+      },
+      "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+      "training_seconds": 16.563326000003144,
+      "validation": {
+        "mae_N": 0.07060559541324292,
+        "rmse_N": 0.09600292016902842,
+        "r2_N": -0.03980971003171452,
+        "bias_N": 0.005272919298772453,
+        "mae_E": 0.05198311334678026,
+        "rmse_E": 0.06988338625968553,
+        "r2_E": -0.02575958398894551,
+        "bias_E": -0.001763976280734986,
+        "mae_D": 0.24010028938780967,
+        "rmse_D": 0.2745912968204211,
+        "r2_D": -1.2945080528861932,
+        "bias_D": 0.21961654202080894,
+        "mae_mean": 0.12089633271594429,
+        "rmse_mean": 0.14682586774971168,
+        "r2_mean": -0.45335911563561776,
+        "bias_mean": 0.07437516167961547
+      },
+      "path": "saved_models/phase2/phase2_v2/classical/rf/4/model.joblib",
+      "trial": 4
+    },
+    "trials": [
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 4,
+          "min_samples_leaf": 20,
+          "max_features": "sqrt"
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 2.8315295840147883,
+        "validation": {
+          "mae_N": 0.0702849789813048,
+          "rmse_N": 0.09588128361076279,
+          "r2_N": -0.03717648285019681,
+          "bias_N": 0.004717278869870208,
+          "mae_E": 0.05177548250220561,
+          "rmse_E": 0.0692048202617996,
+          "r2_E": -0.005936094605175413,
+          "bias_E": -0.0012966856828548227,
+          "mae_D": 0.2552005172563517,
+          "rmse_D": 0.2889397338751591,
+          "r2_D": -1.5405666152128474,
+          "bias_D": 0.23206961333846307,
+          "mae_mean": 0.12575365957995402,
+          "rmse_mean": 0.15134194591590716,
+          "r2_mean": -0.5278930642227398,
+          "bias_mean": 0.07849673550849282
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/0/model.joblib",
+        "trial": 0
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 8,
+          "min_samples_leaf": 20,
+          "max_features": "sqrt"
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 5.322058417019434,
+        "validation": {
+          "mae_N": 0.07086631527981278,
+          "rmse_N": 0.09747639910025953,
+          "r2_N": -0.07197322194536615,
+          "bias_N": -0.0021728827334604474,
+          "mae_E": 0.05253130589200294,
+          "rmse_E": 0.07028996859105395,
+          "r2_E": -0.037730066901251025,
+          "bias_E": -0.0003116122495518862,
+          "mae_D": 0.2595052905311235,
+          "rmse_D": 0.2932517887484511,
+          "r2_D": -1.6169618387735079,
+          "bias_D": 0.23877447682356606,
+          "mae_mean": 0.12763430390097974,
+          "rmse_mean": 0.15367271881325487,
+          "r2_mean": -0.5755550425400416,
+          "bias_mean": 0.07876332728018458
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/1/model.joblib",
+        "trial": 1
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 16,
+          "min_samples_leaf": 20,
+          "max_features": "sqrt"
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 6.035738584003411,
+        "validation": {
+          "mae_N": 0.0720684171995623,
+          "rmse_N": 0.09950725993002911,
+          "r2_N": -0.1171063407627384,
+          "bias_N": -0.006639727695367715,
+          "mae_E": 0.05334085095899218,
+          "rmse_E": 0.07172115353972547,
+          "r2_E": -0.08041905111668979,
+          "bias_E": 6.710292207820056e-05,
+          "mae_D": 0.2631002383499947,
+          "rmse_D": 0.2971200017142983,
+          "r2_D": -1.6864565930782494,
+          "bias_D": 0.2428686675019701,
+          "mae_mean": 0.12950316883618307,
+          "rmse_mean": 0.1561161383946843,
+          "r2_mean": -0.6279939949858925,
+          "bias_mean": 0.07876534757622686
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/2/model.joblib",
+        "trial": 2
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 8,
+          "min_samples_leaf": 50,
+          "max_features": "sqrt"
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 5.065376874990761,
+        "validation": {
+          "mae_N": 0.07111124430063434,
+          "rmse_N": 0.09786958530000449,
+          "r2_N": -0.08063860441813264,
+          "bias_N": -0.003120039773349655,
+          "mae_E": 0.05239242170889203,
+          "rmse_E": 0.07033380433715573,
+          "r2_E": -0.03902481371283906,
+          "bias_E": -0.0005048933618070219,
+          "mae_D": 0.2589235537682363,
+          "rmse_D": 0.29273117721187136,
+          "r2_D": -1.6076782727738914,
+          "bias_D": 0.2384868690698752,
+          "mae_mean": 0.12747573992592087,
+          "rmse_mean": 0.15364485561634386,
+          "r2_mean": -0.5757805636349543,
+          "bias_mean": 0.0782873119782395
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/3/model.joblib",
+        "trial": 3
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 4,
+          "min_samples_leaf": 50,
+          "max_features": 0.5
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 16.563326000003144,
+        "validation": {
+          "mae_N": 0.07060559541324292,
+          "rmse_N": 0.09600292016902842,
+          "r2_N": -0.03980971003171452,
+          "bias_N": 0.005272919298772453,
+          "mae_E": 0.05198311334678026,
+          "rmse_E": 0.06988338625968553,
+          "r2_E": -0.02575958398894551,
+          "bias_E": -0.001763976280734986,
+          "mae_D": 0.24010028938780967,
+          "rmse_D": 0.2745912968204211,
+          "r2_D": -1.2945080528861932,
+          "bias_D": 0.21961654202080894,
+          "mae_mean": 0.12089633271594429,
+          "rmse_mean": 0.14682586774971168,
+          "r2_mean": -0.45335911563561776,
+          "bias_mean": 0.07437516167961547
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/4/model.joblib",
+        "trial": 4
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 8,
+          "min_samples_leaf": 10,
+          "max_features": 0.5
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 26.986888249986805,
+        "validation": {
+          "mae_N": 0.07128587855334136,
+          "rmse_N": 0.09741287297080727,
+          "r2_N": -0.07057645062030105,
+          "bias_N": -0.0049494336686548126,
+          "mae_E": 0.05243935966604501,
+          "rmse_E": 0.07082683812232708,
+          "r2_E": -0.053642815416835576,
+          "bias_E": -0.000974388801655492,
+          "mae_D": 0.2561886271956236,
+          "rmse_D": 0.28879858812969966,
+          "r2_D": -1.5380851109963634,
+          "bias_D": 0.2352834432758425,
+          "mae_mean": 0.12663795513833664,
+          "rmse_mean": 0.15234609974094468,
+          "r2_mean": -0.5541014590111667,
+          "bias_mean": 0.07645320693517739
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/5/model.joblib",
+        "trial": 5
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 16,
+          "min_samples_leaf": 5,
+          "max_features": "sqrt"
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 6.7077131669502705,
+        "validation": {
+          "mae_N": 0.07236195433853326,
+          "rmse_N": 0.099348107207475,
+          "r2_N": -0.11353578046713841,
+          "bias_N": -0.005317815889310797,
+          "mae_E": 0.05382043674369582,
+          "rmse_E": 0.07186880190830895,
+          "r2_E": -0.08487202773716196,
+          "bias_E": 0.0005411009860743923,
+          "mae_D": 0.26206844512169686,
+          "rmse_D": 0.29675920383989346,
+          "r2_D": -1.6799361345183073,
+          "bias_D": 0.24219326786242132,
+          "mae_mean": 0.12941694540130866,
+          "rmse_mean": 0.15599203765189248,
+          "r2_mean": -0.6261146475742025,
+          "bias_mean": 0.07913885098639496
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/6/model.joblib",
+        "trial": 6
+      },
+      {
+        "family": "rf",
+        "params": {
+          "n_estimators": 150,
+          "max_depth": 16,
+          "min_samples_leaf": 2,
+          "min_samples_split": 5,
+          "max_features": "sqrt"
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 6.784116792026907,
+        "validation": {
+          "mae_N": 0.07250073635386028,
+          "rmse_N": 0.09973007221522338,
+          "r2_N": -0.12211469262279584,
+          "bias_N": -0.005663782366207431,
+          "mae_E": 0.05293544909541904,
+          "rmse_E": 0.07105363387613768,
+          "r2_E": -0.0604013920944495,
+          "bias_E": 0.0016791510191809993,
+          "mae_D": 0.2641487918408633,
+          "rmse_D": 0.29831399357205135,
+          "r2_D": -1.7080913012529688,
+          "bias_D": 0.24379643667743872,
+          "mae_mean": 0.1298616590967142,
+          "rmse_mean": 0.15636589988780414,
+          "r2_mean": -0.6302024619900713,
+          "bias_mean": 0.07993726844347077
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/rf/7/model.joblib",
+        "trial": 7
+      }
+    ]
+  },
+  "hgb": {
+    "best": {
+      "family": "hgb",
+      "params": {
+        "max_iter": 60,
+        "max_depth": 3,
+        "learning_rate": 0.03,
+        "min_samples_leaf": 50,
+        "l2_regularization": 1
+      },
+      "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+      "training_seconds": 1.4696776660275646,
+      "validation": {
+        "mae_N": 0.07149221089659204,
+        "rmse_N": 0.09872435211012125,
+        "r2_N": -0.0995970511777775,
+        "bias_N": 2.8037207335393828e-05,
+        "mae_E": 0.0551284854026607,
+        "rmse_E": 0.07330619000166969,
+        "r2_E": -0.1287012288872884,
+        "bias_E": 0.00014442611658290096,
+        "mae_D": 0.2483068544584417,
+        "rmse_D": 0.27981670317453355,
+        "r2_D": -1.3826668401820146,
+        "bias_D": 0.22839583401581337,
+        "mae_mean": 0.12497585025256482,
+        "rmse_mean": 0.15061574842877481,
+        "r2_mean": -0.5369883734156935,
+        "bias_mean": 0.07618943244657722
+      },
+      "path": "saved_models/phase2/phase2_v2/classical/hgb/0/model.joblib",
+      "trial": 0
+    },
+    "trials": [
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 60,
+          "max_depth": 3,
+          "learning_rate": 0.03,
+          "min_samples_leaf": 50,
+          "l2_regularization": 1
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 1.4696776660275646,
+        "validation": {
+          "mae_N": 0.07149221089659204,
+          "rmse_N": 0.09872435211012125,
+          "r2_N": -0.0995970511777775,
+          "bias_N": 2.8037207335393828e-05,
+          "mae_E": 0.0551284854026607,
+          "rmse_E": 0.07330619000166969,
+          "r2_E": -0.1287012288872884,
+          "bias_E": 0.00014442611658290096,
+          "mae_D": 0.2483068544584417,
+          "rmse_D": 0.27981670317453355,
+          "r2_D": -1.3826668401820146,
+          "bias_D": 0.22839583401581337,
+          "mae_mean": 0.12497585025256482,
+          "rmse_mean": 0.15061574842877481,
+          "r2_mean": -0.5369883734156935,
+          "bias_mean": 0.07618943244657722
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/0/model.joblib",
+        "trial": 0
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 120,
+          "max_depth": 3,
+          "learning_rate": 0.03,
+          "min_samples_leaf": 50,
+          "l2_regularization": 1
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 2.320691208005883,
+        "validation": {
+          "mae_N": 0.07422463287207616,
+          "rmse_N": 0.10216251408790807,
+          "r2_N": -0.17751954783228796,
+          "bias_N": -0.0033646140823857095,
+          "mae_E": 0.05662139098231906,
+          "rmse_E": 0.07563526629470159,
+          "r2_E": -0.2015625450917986,
+          "bias_E": -0.0003222580274657873,
+          "mae_D": 0.2604292778624802,
+          "rmse_D": 0.2897536660068387,
+          "r2_D": -1.554900132436964,
+          "bias_D": 0.24131768247333785,
+          "mae_mean": 0.1304251005722918,
+          "rmse_mean": 0.15585048212981611,
+          "r2_mean": -0.6446607417870168,
+          "bias_mean": 0.07921027012116212
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/1/model.joblib",
+        "trial": 1
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 120,
+          "max_depth": 5,
+          "learning_rate": 0.05,
+          "min_samples_leaf": 50,
+          "l2_regularization": 1
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 3.112268083030358,
+        "validation": {
+          "mae_N": 0.07409144578574779,
+          "rmse_N": 0.10266943333543753,
+          "r2_N": -0.1892339858134573,
+          "bias_N": -0.00877480289396011,
+          "mae_E": 0.055847086873931674,
+          "rmse_E": 0.07577870849625473,
+          "r2_E": -0.2061243909224033,
+          "bias_E": 0.0005654840721519722,
+          "mae_D": 0.2667476240123204,
+          "rmse_D": 0.2985730780073618,
+          "r2_D": -1.7127972754918082,
+          "bias_D": 0.2482080877835643,
+          "mae_mean": 0.13222871889066662,
+          "rmse_mean": 0.1590070732796847,
+          "r2_mean": -0.7027185507425563,
+          "bias_mean": 0.07999958965391872
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/2/model.joblib",
+        "trial": 2
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 200,
+          "max_depth": 5,
+          "learning_rate": 0.03,
+          "min_samples_leaf": 50,
+          "l2_regularization": 10
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 4.842914249980822,
+        "validation": {
+          "mae_N": 0.07419192827779257,
+          "rmse_N": 0.10239929888529875,
+          "r2_N": -0.18298421053892744,
+          "bias_N": -0.009670076464401633,
+          "mae_E": 0.05554131621109506,
+          "rmse_E": 0.07500045093895347,
+          "r2_E": -0.18147748734712965,
+          "bias_E": -0.0003816617554397555,
+          "mae_D": 0.2686987032407964,
+          "rmse_D": 0.30039117066283577,
+          "r2_D": -1.7459357843990149,
+          "bias_D": 0.2502219432206703,
+          "mae_mean": 0.13281064924322802,
+          "rmse_mean": 0.15926364016236266,
+          "r2_mean": -0.7034658274283574,
+          "bias_mean": 0.08005673500027631
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/3/model.joblib",
+        "trial": 3
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 60,
+          "max_depth": 3,
+          "learning_rate": 0.05,
+          "min_samples_leaf": 100,
+          "l2_regularization": 10
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 1.3636767080170102,
+        "validation": {
+          "mae_N": 0.07302125340683555,
+          "rmse_N": 0.10086113428457553,
+          "r2_N": -0.14771135327417495,
+          "bias_N": -0.002300770075117568,
+          "mae_E": 0.055998624747272206,
+          "rmse_E": 0.07492141410726963,
+          "r2_E": -0.1789886747267848,
+          "bias_E": 3.1331942046425556e-05,
+          "mae_D": 0.2547645879130959,
+          "rmse_D": 0.28507659706539235,
+          "r2_D": -1.4730857896780476,
+          "bias_D": 0.23578561866876924,
+          "mae_mean": 0.12792815535573457,
+          "rmse_mean": 0.1536197151524125,
+          "r2_mean": -0.5999286058930025,
+          "bias_mean": 0.0778387268452327
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/4/model.joblib",
+        "trial": 4
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 120,
+          "max_depth": 5,
+          "learning_rate": 0.05,
+          "min_samples_leaf": 100,
+          "l2_regularization": 10
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 3.0246905829990283,
+        "validation": {
+          "mae_N": 0.07515803628957746,
+          "rmse_N": 0.10451377502419247,
+          "r2_N": -0.2323442732965093,
+          "bias_N": -0.010538625618735848,
+          "mae_E": 0.05608206080095845,
+          "rmse_E": 0.07590673429226649,
+          "r2_E": -0.21020325365387182,
+          "bias_E": -0.0005977639375999472,
+          "mae_D": 0.26751625997861495,
+          "rmse_D": 0.2979022421688394,
+          "r2_D": -1.7006207106691766,
+          "bias_D": 0.24761203171683344,
+          "mae_mean": 0.13291878568971696,
+          "rmse_mean": 0.15944091716176614,
+          "r2_mean": -0.7143894125398527,
+          "bias_mean": 0.07882521405349921
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/5/model.joblib",
+        "trial": 5
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 200,
+          "max_depth": 6,
+          "learning_rate": 0.03,
+          "min_samples_leaf": 20,
+          "l2_regularization": 1
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 5.676817041006871,
+        "validation": {
+          "mae_N": 0.07603784780653834,
+          "rmse_N": 0.10557934404139414,
+          "r2_N": -0.25760107735018756,
+          "bias_N": -0.011212921169477311,
+          "mae_E": 0.05812121636224507,
+          "rmse_E": 0.0778988991152516,
+          "r2_E": -0.2745601677101428,
+          "bias_E": 0.0008759213453213289,
+          "mae_D": 0.26797569572812896,
+          "rmse_D": 0.2991791962713141,
+          "r2_D": -1.723822683189287,
+          "bias_D": 0.2487031106448641,
+          "mae_mean": 0.13404491996563747,
+          "rmse_mean": 0.1608858131426533,
+          "r2_mean": -0.7519946427498724,
+          "bias_mean": 0.07945537027356937
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/6/model.joblib",
+        "trial": 6
+      },
+      {
+        "family": "hgb",
+        "params": {
+          "max_iter": 120,
+          "max_depth": 8,
+          "learning_rate": 0.08,
+          "min_samples_leaf": 20,
+          "l2_regularization": 0.5
+        },
+        "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+        "training_seconds": 3.946659457986243,
+        "validation": {
+          "mae_N": 0.07709385253320714,
+          "rmse_N": 0.1058979732493759,
+          "r2_N": -0.2652031910088344,
+          "bias_N": -0.013121302930257683,
+          "mae_E": 0.0600634043505685,
+          "rmse_E": 0.07953866019259753,
+          "r2_E": -0.32878355241794366,
+          "bias_E": -0.00020840396836912427,
+          "mae_D": 0.27067148202719227,
+          "rmse_D": 0.30350793438680873,
+          "r2_D": -1.8032133190122543,
+          "bias_D": 0.25037819396271277,
+          "mae_mean": 0.13594291297032265,
+          "rmse_mean": 0.16298152260959406,
+          "r2_mean": -0.7990666874796775,
+          "bias_mean": 0.07901616235469532
+        },
+        "path": "saved_models/phase2/phase2_v2/classical/hgb/7/model.joblib",
+        "trial": 7
+      }
+    ]
+  }
+}
