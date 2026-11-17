@@ -61,6 +61,27 @@ class TestNeuralModels(unittest.TestCase):
             model = build_model({"model": "tcn", "window": window}, 9)
             self.assertGreaterEqual(model.receptive_field, window)
 
+    def test_positive_control_can_learn_known_signal(self):
+        # A negative flight result must not conceal a broken optimization path.
+        # Synthetic data is used only in this test, never as reported flight data.
+        for family in ["mlp", "tcn", "gru"]:
+            seed_everything(17)
+            sequence = family in {"tcn", "gru"}
+            x = torch.randn(128, 8, 9) if sequence else torch.randn(128, 8)
+            if sequence:
+                x[:, :, -1] = 1
+            current = x[:, -1, :] if sequence else x
+            y = torch.stack([.2 * current[:, 0], -.1 * current[:, 1], .15 * current[:, 2]], dim=1)
+            model = build_model({"model": family, "window": 8, "hidden": 16, "dropout": 0.0}, x.shape[-1])
+            optimizer = torch.optim.Adam(model.parameters(), lr=.005)
+            initial = y.square().mean().item()
+            for _ in range(100):
+                optimizer.zero_grad()
+                loss = (model(x) - y).square().mean()
+                loss.backward()
+                optimizer.step()
+            self.assertLess((model(x) - y).square().mean().item(), initial * .2, family)
+
 
 if __name__ == "__main__":
     unittest.main()
