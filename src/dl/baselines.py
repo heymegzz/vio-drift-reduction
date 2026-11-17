@@ -54,7 +54,7 @@ def fit_baselines(data, config, out):
                           "validation": compute_metrics(data.parts["val"].y, prediction)}
                 joblib.dump({"model": model, "data": data.metadata()}, model_path, compress=3)
                 save_json(score_path, record)
-            record["path"] = str(model_path)
+            record["path"] = str(model_path.relative_to(ROOT))
             record["trial"] = index
             trials.append(record)
             print(f"baseline {family} {index + 1}/{len(candidates)} val={record['validation']['rmse_mean']:.6f}", flush=True)
@@ -78,6 +78,6 @@ def historical_predictions(data, split):
 
 
 def predict_baseline(path, x):
-    artifact = joblib.load(path)
+    artifact = joblib.load(ROOT / path)
     with threadpool_limits(limits=2):
         return artifact["model"].predict(x)

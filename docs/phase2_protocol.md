@@ -52,7 +52,7 @@ declared ensemble, while also reporting every seed. Never select a test-best see
 Optional global gains are selected from {0, .25, .5, .75, 1} using validation
 only, equally for ML and DL. Report ungated and gain-adjusted values. A selected
 zero gain means no demonstrated benefit from that correction. Freeze a decision
-manifest before reading test targets in the evaluation stage.
+manifest before scoring test targets in the evaluation stage.
 
 ## Evidence and stopping
 
