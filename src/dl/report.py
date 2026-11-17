@@ -182,10 +182,10 @@ def generate_report(results, decision):
     for title, body in text_blocks:
         md.extend([f"## {title}", body, ""])
     md.extend(["## Figures", *[f"![{name.removesuffix('.png').replace('_', ' ')}](figures/{name})" for name in figure_names],
-               "", "## Reproduce", "From the repository root, install requirements-phase2-lock.txt, then run:",
-               "```bash", "python -m src.dl.experiment --stage train", "python -m src.dl.experiment --stage evaluate",
+               "", "## Reproduce", "From the repository root, install requirements-phase2-lock.txt, then reproduce the included checkpoint evaluation:",
+               "```bash", "python -m src.dl.experiment --stage evaluate",
                "python -m src.dl.explain", "python -m src.dl.report", "```",
-               "Existing evaluated runs cannot be retuned in place. Use a new config name for a different experiment.",
+               "Existing evaluated runs cannot be retuned in place. For fresh training, copy the configuration with a new name and pass --config. See docs/phase2_usage.md for commands. The commands above use the default phase2_v2 run.",
                "", "## Research context", "- Bai et al., temporal convolutional networks: https://arxiv.org/abs/1803.01271",
                "- Cioffi et al., drone inertial odometry (uses thrust unavailable here): https://arxiv.org/abs/2210.15287"])
     (results / "REPORT.md").write_text("\n\n".join(md) + "\n")

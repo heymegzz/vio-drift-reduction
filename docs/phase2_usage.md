@@ -14,11 +14,11 @@ Use Python 3.12 in a virtual environment. Install
 `requirements-dl.txt` for the supported direct dependencies. The reference run
 uses scikit-learn 1.9.0, matching the original saved estimator metadata.
 
-From the repository root:
+To reproduce evaluation from the included checkpoints, run from the repository
+root in the recorded environment:
 
 ```bash
 python -m unittest discover -s tests -p 'test_*.py'
-python -m src.dl.experiment --stage train
 python -m src.dl.experiment --stage evaluate
 python -m src.dl.explain
 python -m src.dl.report
@@ -27,8 +27,16 @@ python -m src.dl.report
 The default configuration is `configs/dl/benchmark.json`. Training resumes
 identical completed trials, but refuses a changed dataset, training source or
 environment. Once a run has test results, it cannot be retuned in place. To
-retrain from scratch, copy the configuration, change its `name`, and pass it
-with `--config`. Do not select changes by their historical test performance.
+retrain from scratch, copy the configuration to `configs/dl/reproduction.json`
+and change its `name` to `phase2_reproduction`, then run:
+
+```bash
+python -m src.dl.experiment --config configs/dl/reproduction.json --stage all
+python -m src.dl.explain --run phase2_reproduction
+python -m src.dl.report --run phase2_reproduction
+```
+
+Do not select changes by their historical test performance.
 `--smoke` uses a separate run name, one candidate per family, one seed and two
 epochs; it is a functional check, not a scientific result.
 
@@ -54,6 +62,13 @@ Unselected classical checkpoint binaries and smoke runs are excluded from Git
 to avoid repository bloat. All trial metadata and selected classical models are
 retained. Neural checkpoints are compact and retained. Paths in decision files
 are repository-relative and portable. Load only trusted model checkpoints.
+
+`verification.json` records the completed local checks and `tests.log` contains
+the 27-test result. `SHA256SUMS.txt` records the delivered code, data and artifact
+hashes. Verify it from the repository root with
+`shasum -a 256 -c results/phase2/phase2_v2/SHA256SUMS.txt` on macOS, or
+`sha256sum -c results/phase2/phase2_v2/SHA256SUMS.txt` on Linux. Re-evaluation
+updates timing/manifest files; check the delivered hashes before regenerating.
 
 ## Inference
 
