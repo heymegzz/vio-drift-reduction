@@ -19,6 +19,8 @@ than the original Random Forest does not establish useful drift reduction.
   [comparison table](results/phase2/phase2_v2/summary.csv).
 - [Reproduction and inference guide](docs/phase2_usage.md) and
   [frozen research protocol](docs/phase2_protocol.md).
+- [Phase 1 audit](docs/phase1_audit.md) — what was reused, what needed care,
+  and why a full rewrite was unnecessary.
 
 Use Python 3.12 and install `requirements-phase2-lock.txt` in a virtual
 environment for the recorded environment. `make dl-test` runs all tests;

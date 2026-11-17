@@ -72,6 +72,32 @@ updates timing/manifest files; check the delivered hashes before regenerating.
 
 ## Inference
 
+The reference run uses CPU PyTorch in float32 with two compute threads; a GPU
+is not required for this dataset. Summed recorded fit time for all 66 fits was
+757.65 seconds (12.63 minutes), excluding setup, shared data preparation,
+explanations and reporting. This is an observation on the recorded host, not a
+runtime guarantee on another computer.
+
+| Selected neural configuration | Parameters | Window | Learning rate | Loss |
+| --- | ---: | ---: | ---: | --- |
+| Feature MLP, hidden 16 | 2,451 | Engineered history up to 100 rows | 0.0003 | MSE |
+| Raw MLP, hidden 32 | 867 | Current row | 0.0003 | MSE |
+| TCN, hidden 16 | 7,715 | 100 rows | 0.001 | Huber, delta 0.1 |
+| GRU, hidden 32 | 4,131 | 100 rows | 0.0003 | MSE |
+
+All use dropout 0.1; each selected configuration has five fixed replicas.
+The feature MLP tests nonlinear use of the existing ML representation, the raw
+MLP controls for current-input nonlinearity, and TCN/GRU test convolutional and
+recurrent temporal modeling. The available data and negative baseline evidence
+do not justify adding a large transformer or a visual model without images.
+
+Measured single-checkpoint streaming medians were 15.40 ms for the feature MLP,
+0.27 ms for the raw MLP, 0.68 ms for TCN and 0.77 ms for GRU, including input
+preparation. Recomputing rolling features in the reference MLP streamer exceeds
+the nominal 5 ms sensor interval. Its batch throughput must not be presented as
+real-time streaming performance. None of these timings measures a five-model
+ensemble on a flight controller.
+
 `src.dl.inference.ResidualPredictor` accepts integer microsecond timestamps and
 a dictionary containing the six named IMU axes and two magnitudes. It rejects
 nonfinite readings and non-increasing timestamps, automatically resets across

@@ -1,0 +1,33 @@
+{
+  "checked_at_utc": "2026-11-17T12:02:35.820697+00:00",
+  "status": "passed",
+  "unit_tests": 27,
+  "unit_test_command": "python -W ignore -m unittest discover -s tests -p 'test_*.py'",
+  "unit_test_log": "tests.log",
+  "smoke_command": "python -W ignore -m src.dl.experiment --smoke --stage all",
+  "smoke_exit_code": 0,
+  "fits": 66,
+  "neural_checkpoints": 42,
+  "prediction_arrays_recomputed": {
+    "val": 32,
+    "test": 45
+  },
+  "summed_fit_wall_seconds": 757.654142040934,
+  "checks": [
+    "training fingerprint and package versions match frozen identity",
+    "dataset and decision hashes match evaluation",
+    "decision freeze precedes test evaluation",
+    "all exported prediction metrics recompute",
+    "five prescribed seed ensembles match",
+    "all gains and selected policy match frozen decisions",
+    "test row IDs and labels align to source",
+    "selected correction subtraction identity holds",
+    "all selected model files exist",
+    "Phase 1 source, data, models, results, report and presentation unchanged"
+  ],
+  "limitations": [
+    "No independent flight sessions or confirmed GNSS outage available",
+    "GitHub-hosted CI has not run; local suite passed",
+    "Timing is local CPU research timing, not embedded deployment timing"
+  ]
+}
