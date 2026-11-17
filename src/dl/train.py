@@ -59,7 +59,10 @@ def fit_neural(data, config, seed, directory, train_settings):
                                  weight_decay=config.get("weight_decay", .0001))
     loss_fn = nn.MSELoss() if config.get("loss", "mse") == "mse" else nn.HuberLoss(delta=.1)
     val_y = data.parts["val"].y[validation.endpoints]
-    best_score = compute_metrics(val_y, predict(model, validation))["rmse_mean"]
+    initial_score = compute_metrics(val_y, predict(model, validation))["rmse_mean"]
+    # Compare trained epochs here; zero correction remains a separate competitor.
+    # Otherwise an epoch-zero checkpoint would conceal unsuccessful learned fits.
+    best_score = float("inf")
     best_state = copy.deepcopy(model.state_dict())
     best_epoch, stale, history = 0, 0, []
     started = time.perf_counter()
@@ -90,6 +93,7 @@ def fit_neural(data, config, seed, directory, train_settings):
     val_prediction = predict(model, data.dataset("val", config))
     details = {"config": config, "seed": seed, "settings": train_settings,
                "dataset_sha256": data.checksum, "best_epoch": best_epoch,
+               "initial_zero_validation_rmse": float(initial_score),
                "epochs_run": len(history), "training_seconds": time.perf_counter() - started,
                "parameters": sum(p.numel() for p in model.parameters()),
                "validation": compute_metrics(data.parts["val"].y, val_prediction), "history": history}

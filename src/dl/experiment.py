@@ -36,7 +36,8 @@ def training_fingerprint():
 
 
 def train_experiment(data, config, artifacts, results):
-    identity = {"config": config, "dataset_sha256": data.checksum, "training_code_sha256": training_fingerprint()}
+    identity = {"config": config, "dataset_sha256": data.checksum, "training_code_sha256": training_fingerprint(),
+                "packages": environment()["packages"]}
     identity_path = artifacts / "identity.json"
     if identity_path.exists() and json.loads(identity_path.read_text()) != identity:
         raise ValueError("Experiment identity changed. Use a new config name; do not overwrite an experiment.")

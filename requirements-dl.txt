@@ -2,7 +2,7 @@
 # requirements-phase2-lock.txt after a completed experiment.
 numpy>=1.26,<3
 pandas>=2.2,<3
-scikit-learn==1.8.0
+scikit-learn==1.9.0
 scipy>=1.11
 matplotlib>=3.8
 seaborn>=0.13

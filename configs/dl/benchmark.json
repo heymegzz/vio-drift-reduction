@@ -1,5 +1,5 @@
 {
-  "name": "phase2_v1",
+  "name": "phase2_v2",
   "seeds": [11, 23, 37, 51, 71],
   "training": {"threads": 2, "batch_size": 128, "epochs": 60, "patience": 10, "train_stride": 5, "validation_stride": 5},
   "baselines": {

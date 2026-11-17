@@ -45,6 +45,12 @@ efficiency; final configuration selection uses all validation rows. Training
 endpoint subsampling is explicit. It does not create independent examples.
 All architecture/configuration decisions precede test evaluation.
 
+The output head starts at zero. Model checkpoints are selected from trained
+epochs (epoch >= 1), keeping failed learned corrections visible in the results.
+Zero correction competes separately in the final validation decision. A setup
+smoke run revealed sklearn 1.9.0 in the historical checkpoints; the full run
+uses that matching version, and environment versions are part of run identity.
+
 Five predetermined seeds (11, 23, 37, 51, 71) quantify optimization variation for
 selected neural configurations. Average predictions across those seeds for the
 declared ensemble, while also reporting every seed. Never select a test-best seed.
