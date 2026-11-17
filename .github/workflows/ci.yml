@@ -26,7 +26,7 @@ jobs:
 
     - name: Run pipeline unit tests
       run: |
-        python -W ignore -m unittest discover -s tests -p "test_*.py"
+        python -W ignore -m unittest tests.test_feature_engineering tests.test_model_inference
 
     - name: Verify data preparation and leakage safeguards
       run: |

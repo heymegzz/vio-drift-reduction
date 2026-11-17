@@ -3,7 +3,8 @@ pandas>=2.2,<3
 numpy>=1.23
 matplotlib>=3.6
 seaborn>=0.12
-scikit-learn>=1.8.0
+# Match the checked-in historical estimator serialization version.
+scikit-learn==1.9.0
 
 # Jupyter / notebook tooling
 jupyter>=1.0

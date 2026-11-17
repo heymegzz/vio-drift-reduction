@@ -1,5 +1,31 @@
 # ML-Assisted IMU Drift Reduction for GNSS-Denied UAV Navigation
 
+## Phase 2: completed offline deep-learning benchmark
+
+The causal DL benchmark adds a feature MLP, raw-input MLP, temporal convolutional
+network and GRU, with validation-only selection, five fixed seeds per selected
+neural configuration, and controlled retuning of the classical baselines.
+**66 fits were completed: 24 classical and 42 neural.**
+
+The central finding remains negative: zero correction achieves **0.147245 m/s**
+mean-axis RMSE on historical test log 54. The lowest descriptive DL score is
+**0.150897 m/s** for the raw-input MLP ensemble, which is 2.48% worse than zero
+correction. Validation independently selects zero correction. A smaller error
+than the original Random Forest does not establish useful drift reduction.
+
+- [Visual report](results/phase2/phase2_v2/REPORT.html) — download/open locally;
+  self-contained figures and interpretation.
+- [GitHub-readable report](results/phase2/phase2_v2/REPORT.md) and
+  [comparison table](results/phase2/phase2_v2/summary.csv).
+- [Reproduction and inference guide](docs/phase2_usage.md) and
+  [frozen research protocol](docs/phase2_protocol.md).
+
+Use Python 3.12 and install `requirements-phase2-lock.txt` in a virtual
+environment for the recorded environment. `make dl-test` runs all tests;
+`make dl-smoke` checks the end-to-end pipeline. See the guide before retraining:
+completed evaluated runs are protected against in-place retuning. Phase 1
+reports, slides, saved models and results remain unchanged.
+
 ## Project Background
 
 Unmanned aerial vehicles (UAVs) rely on inertial measurement units (IMUs) for attitude and velocity estimation. In GNSS-denied environments—indoors, urban canyons, or under deliberate jamming—the inertial navigation solution drifts over time due to sensor bias, noise, and integration error. This project investigates whether machine-learning models can predict the velocity residual between a PX4 estimator output and GPS reference measurements (Δv_N, Δv_E, Δv_D), with the long-term goal of applying learned corrections during GNSS outages.

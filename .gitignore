@@ -34,3 +34,9 @@ scratch/
 # Generated feature datasets (keep raw data, ignore engineered outputs)
 feature_engineered_dataset.csv
 
+# Phase 2 functional smoke checks are not research results.
+results/phase2/*_smoke*/
+saved_models/phase2/*_smoke*/
+# Keep all search metadata, but only explicitly add selected tree checkpoints.
+saved_models/phase2/**/classical/**/model.joblib
+
