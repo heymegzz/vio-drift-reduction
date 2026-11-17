@@ -1,0 +1,10 @@
+# Python 3.12 is the reference interpreter. Exact observed versions are in
+# requirements-phase2-lock.txt after a completed experiment.
+numpy>=1.26,<3
+pandas>=2.2,<3
+scikit-learn==1.8.0
+scipy>=1.11
+matplotlib>=3.8
+seaborn>=0.13
+torch>=2.2
+threadpoolctl>=3.2
