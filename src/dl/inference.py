@@ -32,16 +32,19 @@ class ResidualPredictor:
         magnitudes in the checkpoint schema. Explicit reset is required at a
         new recording, even if its timestamp happens to increase.
         """
+        elapsed_s = 0.0
         if self.last_timestamp is not None:
             dt = int(timestamp) - self.last_timestamp
             if dt <= 0:
                 raise ValueError("Non-increasing streaming timestamp")
             if dt > self.metadata["gap_threshold_us"]:
                 self.reset()
+            else:
+                elapsed_s = dt / 1e6
         row = {name: float(imu[name]) for name in self.metadata["raw_names"]}
         if not np.isfinite(list(row.values())).all():
             raise ValueError("Nonfinite IMU input")
-        row.update(timestamp=int(timestamp), log_id="stream", time_s=0.0)
+        row.update(timestamp=int(timestamp), log_id="stream", time_s=0.0, _elapsed_s=elapsed_s)
         self.buffer.append(row)
         self.last_timestamp = int(timestamp)
         frame = pd.DataFrame(self.buffer)
@@ -52,7 +55,8 @@ class ResidualPredictor:
         else:
             x = self.raw_scale.transform(frame[self.metadata["raw_names"]].to_numpy())
         if self.config.get("use_dt", False):
-            dt = frame.timestamp.diff().fillna(0).to_numpy()[:, None] / 1e6
+            # Retain dt measured on arrival, including at a truncated buffer edge.
+            dt = frame._elapsed_s.to_numpy()[:, None]
             x = np.column_stack([x, self.dt_scale.transform(dt)])
         dataset = CausalDataset(x, np.zeros((len(x), 3)), np.zeros(len(x)),
                                 self.config.get("window", 1), [len(x) - 1], sequence)
