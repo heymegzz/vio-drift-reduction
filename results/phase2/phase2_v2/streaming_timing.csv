@@ -1,0 +1,5 @@
+model,rows,median_ms,p95_ms,p99_ms,max_batch_stream_difference,scope
+mlp,160,15.400645992485806,17.611495210439895,20.264692773926054,1.4901161193847656e-08,"one model, local CPU, preprocessing included; not onboard or ensemble timing"
+raw_mlp,160,0.26777051971293986,0.30794931517448276,0.333515562233515,3.725290298461914e-09,"one model, local CPU, preprocessing included; not onboard or ensemble timing"
+tcn,160,0.6785414589103311,0.942789341206662,1.377889668219722,1.4901161193847656e-08,"one model, local CPU, preprocessing included; not onboard or ensemble timing"
+gru,160,0.7704790041316301,1.929397927597164,2.8486262867227174,1.4901161193847656e-08,"one model, local CPU, preprocessing included; not onboard or ensemble timing"

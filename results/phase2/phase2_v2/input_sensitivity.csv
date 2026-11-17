@@ -1,0 +1,9 @@
+model,group,validation_rmse,ablated_validation_rmse,delta_rmse,replicate_seed,interpretation
+mlp,accelerometer,0.12110731550157879,0.12065215943441072,-0.000455156067168061,11,"training-mean replacement sensitivity, not causal importance"
+mlp,gyroscope,0.12110731550157879,0.12079626655381726,-0.00031104894776153025,11,"training-mean replacement sensitivity, not causal importance"
+raw_mlp,accelerometer,0.1218556480393564,0.12114107721317458,-0.000714570826181829,11,"training-mean replacement sensitivity, not causal importance"
+raw_mlp,gyroscope,0.1218556480393564,0.12142728241330242,-0.0004283656260539864,11,"training-mean replacement sensitivity, not causal importance"
+tcn,accelerometer,0.13534022290217237,0.1311623111291859,-0.004177911772986487,11,"training-mean replacement sensitivity, not causal importance"
+tcn,gyroscope,0.13534022290217237,0.13213830205953853,-0.0032019208426338486,11,"training-mean replacement sensitivity, not causal importance"
+gru,accelerometer,0.12729000325506315,0.12677249018781778,-0.0005175130672453732,11,"training-mean replacement sensitivity, not causal importance"
+gru,gyroscope,0.12729000325506315,0.12715039180464488,-0.00013961145041826994,11,"training-mean replacement sensitivity, not causal importance"

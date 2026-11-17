@@ -1,0 +1,9 @@
+{
+  "evaluated_at_utc": "2026-11-17T11:54:02.228830+00:00",
+  "decision_sha256": "71432a4b00e48e2f05bc9eed3224c9a6c2f8d7bdef639da0cecd27efefba5788",
+  "dataset_sha256": "000e13ec4713b0ae501ab82845cdd96b658acaec4482c56bbe56d00f523508ec",
+  "selected_model": "zero",
+  "selected_gain": 0.0,
+  "evaluation_rows": 8306,
+  "scope": "historical held-out recording; no independent-flight inference"
+}

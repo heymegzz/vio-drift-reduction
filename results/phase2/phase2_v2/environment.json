@@ -1,0 +1,15 @@
+{
+  "python": "3.12.14",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "machine": "arm64",
+  "packages": {
+    "numpy": "2.5.5",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.18.1",
+    "torch": "2.15.0",
+    "matplotlib": "3.11.2"
+  },
+  "git_revision": "d3cb2f5164482f670fa1a4a9c4fabbc87d847c6f",
+  "recorded_at_utc": "2026-11-17T04:18:00.509557+00:00"
+}

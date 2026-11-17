@@ -1,0 +1,56 @@
+{
+  "frozen_at_utc": "2026-11-17T04:40:26.822139+00:00",
+  "gains": {
+    "zero": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "train_mean": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "historical_ridge": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "historical_rf": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "historical_gbm": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "ridge": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "rf": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "hgb": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "mlp": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "raw_mlp": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "tcn": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    },
+    "gru": {
+      "gain": 0.0,
+      "validation_rmse": 0.11855695958627992
+    }
+  },
+  "selected_model": "zero",
+  "selected_gain": 0.0,
+  "selection_metric": "mean of axis RMSE on log_52"
+}
